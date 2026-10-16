@@ -1,0 +1,403 @@
+@import 'tailwindcss';
+
+/* Layout concept: a bound book. Each chapter is a sheet on a cool, blue-tinted ground,
+   with a spine shadow on the left and stacked page edges on the right.
+   IMAS blue leads, IMAS green marks progress, and New Brunswick forest and maroon
+   appear like the seal and ribbon on a diploma. */
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('./assets/fonts/newsreader-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('./assets/fonts/newsreader-latin-wght-italic.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('./assets/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('./assets/fonts/atkinson-hyperlegible-next-latin-wght-italic.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('./assets/fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Colour: every value is a token, with light values here */
+  --ground: #eef3f8;
+  --sheet: #ffffff;
+  --sheet-2: #f6f9fc;
+  --ink: #0d2033;
+  --ink-2: #3a4d64;
+  --ink-3: #5b6e86;
+  --rule: #d9e2ec;
+  --rule-strong: #b9c7d6;
+  --blue: #005090;
+  --blue-deep: #003a6b;
+  --blue-tint: #e4eef8;
+  --on-blue: #ffffff;
+  --green: #33b747;
+  --green-ink: #1b7a2c;
+  --green-tint: #e5f5e8;
+  --forest: #00403b;
+  --forest-tint: #e1efed;
+  --maroon: #881211;
+  --maroon-tint: #f6e6e6;
+  --wave: #1060a8;
+  --cover: #004a85;
+  --cover-2: #00335e;
+  --foil: #e9eef4;
+  --shadow: 13 32 51;
+  --plate: #ffffff;
+  --mark-plate: transparent;
+  /* Chart series (validated for colour-blind separation and contrast) */
+  --viz-1: #1d6fb8;
+  --viz-2: #2e9a43;
+
+  /* Type */
+  --font-display: 'Newsreader', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-body: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ground: #07111c;
+    --sheet: #0d1a28;
+    --sheet-2: #112233;
+    --ink: #e8eef5;
+    --ink-2: #b7c5d5;
+    --ink-3: #8fa1b6;
+    --rule: #20324a;
+    --rule-strong: #34496a;
+    --blue: #7ab8ef;
+    --blue-deep: #b0d6f7;
+    --blue-tint: #11304d;
+    --on-blue: #06192b;
+    --green: #4fcb62;
+    --green-ink: #7ad98a;
+    --green-tint: #11331b;
+    --forest: #6cc3b8;
+    --forest-tint: #0e2b29;
+    --maroon: #ec8b88;
+    --maroon-tint: #3a1617;
+    --wave: #7aaee3;
+    --cover: #0b3d68;
+    --cover-2: #062743;
+    --foil: #dbe6f1;
+    --shadow: 0 0 0;
+    --plate: #f4f7fb;
+    --mark-plate: #f4f7fb;
+    --viz-1: #4a90d6;
+    --viz-2: #38a64d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --ground: #07111c;
+  --sheet: #0d1a28;
+  --sheet-2: #112233;
+  --ink: #e8eef5;
+  --ink-2: #b7c5d5;
+  --ink-3: #8fa1b6;
+  --rule: #20324a;
+  --rule-strong: #34496a;
+  --blue: #7ab8ef;
+  --blue-deep: #b0d6f7;
+  --blue-tint: #11304d;
+  --on-blue: #06192b;
+  --green: #4fcb62;
+  --green-ink: #7ad98a;
+  --green-tint: #11331b;
+  --forest: #6cc3b8;
+  --forest-tint: #0e2b29;
+  --maroon: #ec8b88;
+  --maroon-tint: #3a1617;
+  --wave: #7aaee3;
+  --cover: #0b3d68;
+  --cover-2: #062743;
+  --foil: #dbe6f1;
+  --shadow: 0 0 0;
+  --plate: #f4f7fb;
+  --mark-plate: #f4f7fb;
+  --viz-1: #4a90d6;
+  --viz-2: #38a64d;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-sheet: var(--sheet);
+  --color-sheet-2: var(--sheet-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-blue: var(--blue);
+  --color-blue-deep: var(--blue-deep);
+  --color-blue-tint: var(--blue-tint);
+  --color-on-blue: var(--on-blue);
+  --color-green: var(--green);
+  --color-green-ink: var(--green-ink);
+  --color-green-tint: var(--green-tint);
+  --color-forest: var(--forest);
+  --color-forest-tint: var(--forest-tint);
+  --color-maroon: var(--maroon);
+  --color-maroon-tint: var(--maroon-tint);
+  --color-wave: var(--wave);
+  --color-plate: var(--plate);
+  --color-viz-1: var(--viz-1);
+  --color-viz-2: var(--viz-2);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+::selection {
+  background: var(--blue-tint);
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Side gutter, used once per full-width band */
+.gutter {
+  padding-left: var(--gutter-l);
+  padding-right: var(--gutter-r);
+}
+.measure {
+  max-width: 65ch;
+}
+
+/* Typographic roles */
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: clamp(2.4rem, 4.2vw + 1rem, 4.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+}
+.t-h1 {
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: clamp(2.1rem, 2.6vw + 1rem, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+}
+.t-h2 {
+  font-family: var(--font-display);
+  font-weight: 560;
+  font-size: clamp(1.5rem, 1vw + 1.1rem, 2.05rem);
+  line-height: 1.15;
+}
+.t-h3 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.35;
+}
+.t-lede {
+  font-size: clamp(1.125rem, 0.4vw + 1rem, 1.3rem);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.t-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.t-num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* The book: the sheet a chapter is printed on */
+.sheet {
+  position: relative;
+  background: var(--sheet);
+  border-radius: 6px 14px 14px 6px;
+  box-shadow:
+    0 1px 0 rgb(var(--shadow) / 0.04),
+    0 18px 50px -24px rgb(var(--shadow) / 0.35);
+}
+.sheet::before {
+  /* spine */
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 28px;
+  border-radius: 6px 0 0 6px;
+  background: linear-gradient(90deg, rgb(var(--shadow) / 0.1), rgb(var(--shadow) / 0));
+  pointer-events: none;
+}
+.sheet::after {
+  /* stacked page edges */
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  right: -6px;
+  width: 6px;
+  border-radius: 0 6px 6px 0;
+  background: repeating-linear-gradient(90deg, var(--rule) 0 1px, var(--sheet-2) 1px 3px);
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .sheet::after {
+    display: none;
+  }
+  .sheet {
+    border-radius: 6px;
+  }
+}
+
+.flip-stage {
+  perspective: 2200px;
+  perspective-origin: 0% 40%;
+}
+
+/* Logo plate keeps the dark-on-transparent marks readable in dark mode */
+.plate {
+  background: var(--plate);
+  border-radius: 10px;
+}
+
+/* The IMAS mark is blue on transparent: give it a light backing only in dark mode */
+.mark-plate {
+  background: var(--mark-plate);
+  border-radius: 10px;
+}
+
+/* Images that have a separate light and dark version */
+.only-dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .only-dark {
+    display: block;
+  }
+  :root:not([data-theme='light']) .only-light {
+    display: none;
+  }
+}
+:root[data-theme='dark'] .only-dark {
+  display: block;
+}
+:root[data-theme='dark'] .only-light {
+  display: none;
+}
+
+/* Links in running text */
+.prose-link {
+  color: var(--blue);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.prose-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Home hero: the page colour washes over the photo behind the text.
+   On phones the photo sits above the text and fades into the page. */
+.hero-wash {
+  background: linear-gradient(to bottom, transparent 0, transparent 170px, var(--ground) 292px);
+}
+@media (min-width: 640px) {
+  .hero-wash {
+    background:
+      linear-gradient(90deg, var(--ground) 0%, color-mix(in srgb, var(--ground) 94%, transparent) 30%,
+        color-mix(in srgb, var(--ground) 62%, transparent) 52%, color-mix(in srgb, var(--ground) 8%, transparent) 78%, transparent 100%),
+      linear-gradient(to top, var(--ground) 0%, transparent 22%);
+  }
+}
+.kenburns {
+  animation: kenburns 24s ease-in-out 2.2s infinite alternate;
+  transform-origin: 60% 40%;
+}
+@keyframes kenburns {
+  from {
+    translate: 0 0;
+    scale: 1;
+  }
+  to {
+    translate: -1.5% -1%;
+    scale: 1.07;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kenburns {
+    animation: none;
+  }
+}
+
+/* Book cover on the home page */
+.cover {
+  background:
+    radial-gradient(120% 80% at 20% 0%, rgb(255 255 255 / 0.12), transparent 60%),
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 5px),
+    linear-gradient(160deg, var(--cover), var(--cover-2));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
