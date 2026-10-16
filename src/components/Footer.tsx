@@ -79,9 +79,14 @@ export function Footer() {
       </div>
       <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3 border-t border-rule py-5 text-sm text-ink-3">
         <p>© {new Date().getFullYear()} IMAS International School. Managed and owned by Alnoor Foundation.</p>
-        <Link to="/admin" className="hover:text-blue">
-          Staff sign-in
-        </Link>
+        <p className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link to="/portal" className="hover:text-blue">
+            Student sign-in
+          </Link>
+          <Link to="/admin" className="hover:text-blue">
+            Staff sign-in
+          </Link>
+        </p>
       </div>
     </footer>
   );

@@ -135,3 +135,91 @@ test('the admin panel refuses a wrong assessment split', async ({ page }) => {
   await page.getByRole('button', { name: 'Save settings' }).click();
   await expect(page.getByText('The two assessment weights must add up to 100.')).toBeVisible();
 });
+
+async function expectAccessible(page: Page) {
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+  const axe = await new AxeBuilder({ page: page as unknown as ConstructorParameters<typeof AxeBuilder>[0]['page'] }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  const serious = axe.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+  expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
+}
+
+test('Student Portal: first sign-in forces a new password, then sign out', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/student-hub');
+  await page.getByRole('link', { name: 'Sign in to the portal' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your Student Portal');
+  await expectAccessible(page);
+
+  await page.getByLabel('Student ID').fill('260001');
+  await page.getByLabel('Password', { exact: true }).fill('wrong-one');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('alert')).toContainText('isn’t right');
+
+  await page.getByLabel('Password', { exact: true }).fill('A1234567');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByText('Create your own password to continue')).toBeVisible();
+  // The portal itself stays locked.
+  await expect(page.getByText('My cohort')).toHaveCount(0);
+  await expectAccessible(page);
+
+  await page.getByLabel('New password').fill('260001abc');
+  await expect(page.getByRole('list', { name: 'Password rules' })).toContainText('Not your Student ID');
+  await page.getByRole('button', { name: 'Save my password' }).click();
+  await expect(page.getByRole('alert')).toContainText('doesn’t meet all the rules');
+
+  await page.getByLabel('New password').fill('Maple-leaf7');
+  await page.getByLabel('Type it again').fill('Maple-leaf8');
+  await page.getByRole('button', { name: 'Save my password' }).click();
+  await expect(page.getByRole('alert')).toContainText('don’t match');
+
+  await page.getByLabel('Type it again').fill('Maple-leaf7');
+  await page.getByRole('button', { name: 'Save my password' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Welcome, Demo');
+  await expect(page.getByText('CAN · Grade 10 entry')).toBeVisible();
+  await expectAccessible(page);
+
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByLabel('Student ID')).toBeVisible();
+  // The new password works; the first one no longer does.
+  await page.getByLabel('Student ID').fill('260001');
+  await page.getByLabel('Password', { exact: true }).fill('A1234567');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('alert')).toContainText('isn’t right');
+  await page.getByLabel('Password', { exact: true }).fill('Maple-leaf7');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Welcome, Demo');
+  expect(errors).toEqual([]);
+});
+
+test('admin Students: import from a pasted list, then the student can sign in', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/students');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Students');
+  await page.getByLabel('Paste the rows here').fill(
+    ['Student ID\tFull name\tID number\tTrack', '260101\tAisha Rahman\t080512101234\tCAN Grade 11', '260102\tDaniel Lim\t12\t', '260001\tDemo Student\tA1234567\t'].join('\n'),
+  );
+  await expect(page.getByText('2 students ready to add')).toBeVisible();
+  await expect(page.getByText('the ID number must be at least 6 characters')).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Create 2 accounts' }).click();
+  await expect(page.getByText('1 created · 1 already had an account')).toBeVisible();
+
+  const row = page.getByRole('button', { name: /260101/ });
+  await expect(row).toContainText('Waiting for first sign-in');
+  await expect(row).toContainText('CAN · Grade 11 entry');
+  await row.click();
+  await page.getByLabel('Forgotten password? Set a temporary one').fill('Temp-2026');
+  await page.getByRole('button', { name: 'Reset password' }).click();
+  await expect(page.getByText('Password reset.')).toBeVisible();
+  await expectAccessible(page);
+
+  // Back to the site without reloading (the demo keeps accounts in memory).
+  await page.getByRole('link', { name: 'View site' }).click();
+  await page.getByRole('link', { name: 'Student sign-in' }).click();
+  await page.getByLabel('Student ID').fill('260101');
+  await page.getByLabel('Password', { exact: true }).fill('Temp-2026');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByText('Create your own password to continue')).toBeVisible();
+  expect(errors).toEqual([]);
+});

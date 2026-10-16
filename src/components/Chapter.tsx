@@ -1,13 +1,14 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { CHAPTERS, chapterIndex, chapterLabel } from '../chapters';
 
 /** One chapter of the book, printed on its own sheet. */
 export function Chapter({ lede, children }: { lede?: ReactNode; children: ReactNode }) {
-  const { pathname } = useLocation();
+  // The chapter's own address, kept while the page turns away to a page that isn't a chapter (such as the portal).
+  const [pathname] = useState(useLocation().pathname);
   const i = chapterIndex(pathname);
-  const c = CHAPTERS[i];
+  const c = CHAPTERS[i] ?? { path: pathname, title: '', numeral: '', blurb: '' };
 
   return (
     <div className="gutter py-6 sm:py-10">

@@ -12,6 +12,7 @@ import { Graduation } from './pages/Graduation';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 import { Pathways } from './pages/Pathways';
+import { Portal } from './pages/Portal';
 import { StudentHub } from './pages/StudentHub';
 import { Universities } from './pages/Universities';
 
@@ -31,6 +32,7 @@ export const routes: RouteObject[] = [
       { path: 'academic-year', element: <AcademicYear /> },
       { path: 'universities', element: <Universities /> },
       { path: 'student-hub', element: <StudentHub /> },
+      { path: 'portal', element: <Portal /> },
       { path: 'faq', element: <Faq /> },
       { path: 'contact', element: <Contact /> },
       { path: '*', element: <NotFound /> },

@@ -4,10 +4,10 @@
 -- Security model
 --   • Anyone can read published content (the public website).
 --   • Only people listed in public.admins can add, change or delete content.
---   • Staff sign in with Google; their email must be in public.admins.
+--   • Staff sign in with their email and password; their email must be in public.admins.
 --
--- Stage 2 (student portal) will add students, enrolments, grades, ielts_results and
--- advisor_notes in a later migration. Nothing here needs to change for that.
+-- Student accounts are added by 0002_students.sql. Later Stage 2 migrations will add
+-- enrolments, grades, ielts_results and advisor_notes. Nothing here needs to change for that.
 
 -- ---------------------------------------------------------------------------
 -- Editors

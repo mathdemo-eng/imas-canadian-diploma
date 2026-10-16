@@ -2,7 +2,7 @@ import { ArrowRight, BarChart3, CalendarRange, Compass, FileText, GraduationCap,
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chapter } from '../components/Chapter';
-import { Badge, Section } from '../components/ui';
+import { Badge, ButtonLink, Section } from '../components/ui';
 import { useSite } from '../content/useSite';
 
 function checklist(attendance: number, band: number) {
@@ -155,33 +155,41 @@ export function StudentHub() {
         )}
       </Section>
 
-      <Section eyebrow="Coming next" title="Your Student Portal">
-        <div className="grid gap-6 rounded-2xl border-2 border-dashed border-blue p-6 sm:p-8 lg:grid-cols-[1fr_1.2fr]">
+      <Section id="portal" eyebrow="Student Portal" title="Your Student Portal">
+        <div className="grid gap-6 rounded-2xl border-2 border-blue p-6 sm:p-8 lg:grid-cols-[1fr_1.2fr]">
           <div className="grid content-start gap-3">
             <span className="flex items-center gap-2 text-blue">
               <LockKeyhole size={20} aria-hidden />
-              <span className="t-label">Sign in with your IMAS account</span>
+              <span className="t-label">Sign in with your Student ID</span>
             </span>
             <p className="font-display text-2xl font-semibold leading-snug">A personal profile that follows your progress through the programme.</p>
-            <p className="text-ink-2">The Student Portal is being built now. When it opens, you will sign in here.</p>
+            <p className="text-ink-2">
+              The first time, your password is your ID number. You’ll create your own password straight away.
+            </p>
+            <ButtonLink to="/portal" className="w-fit">
+              Sign in to the portal <ArrowRight size={18} aria-hidden />
+            </ButtonLink>
           </div>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {[
-              { icon: GraduationCap, t: 'Subjects covered', d: 'Courses completed, in progress and still to come' },
-              { icon: BarChart3, t: 'Grades', d: 'Your results, course by course and semester by semester' },
-              { icon: CalendarRange, t: 'Time to graduate', d: 'Credit-hours earned and your projected graduation date' },
-              { icon: Sparkles, t: 'Academic advisor', d: 'Personal guidance on how to improve, based on your results' },
-            ].map(({ icon: Icon, t, d }) => (
-              <li key={t} className="grid content-start gap-1 rounded-xl bg-sheet-2 p-4">
-                <Icon size={20} aria-hidden className="text-blue" />
-                <p className="font-semibold">{t}</p>
-                <p className="text-sm text-ink-2">{d}</p>
-              </li>
-            ))}
-          </ul>
+          <div className="grid content-start gap-3">
+            <p className="t-label text-ink-3">Coming soon to your portal</p>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {[
+                { icon: GraduationCap, t: 'Subjects covered', d: 'Courses completed, in progress and still to come' },
+                { icon: BarChart3, t: 'Grades', d: 'Your results, course by course and semester by semester' },
+                { icon: CalendarRange, t: 'Time to graduate', d: 'Credit-hours earned and your projected graduation date' },
+                { icon: Sparkles, t: 'Academic advisor', d: 'Personal guidance on how to improve, based on your results' },
+              ].map(({ icon: Icon, t, d }) => (
+                <li key={t} className="grid content-start gap-1 rounded-xl bg-sheet-2 p-4">
+                  <Icon size={20} aria-hidden className="text-blue" />
+                  <p className="font-semibold">{t}</p>
+                  <p className="text-sm text-ink-2">{d}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
         <p className="flex items-center gap-2 text-sm text-ink-3">
-          <Compass size={16} aria-hidden /> Until then, use this hub and your academic plan to review your progress.
+          <Compass size={16} aria-hidden /> Until these arrive, use this hub and your academic plan to review your progress.
         </p>
       </Section>
     </Chapter>

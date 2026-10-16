@@ -1,9 +1,12 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { ExternalLink, LogOut } from 'lucide-react';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import crest from '../assets/imas-mark.webp';
+import { PasswordInput } from '../components/PasswordInput';
 import { useAllContent } from '../content/hooks';
 import type { ContentBundle } from '../content/types';
+import { signIn, signOut } from '../lib/auth';
 import { isPreviewBuild } from '../lib/supabase';
 import { useAdminAuth, type AdminState } from './auth';
 import { COLLECTIONS, COLLECTION_ORDER } from './collections';
@@ -19,29 +22,35 @@ export function useAdmin() {
 const NAV = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/settings', label: 'Site settings', end: false },
+  { to: '/admin/students', label: 'Students', end: false },
   ...COLLECTION_ORDER.map((k) => ({ to: `/admin/${k}`, label: COLLECTIONS[k].title, end: false })),
 ];
 
 export function AdminLayout() {
-  const { state, signIn, signOut } = useAdminAuth();
+  const state = useAdminAuth();
   const { data: content } = useAllContent();
+  const qc = useQueryClient();
+  const leave = async () => {
+    await signOut();
+    qc.removeQueries({ queryKey: ['students'] });
+  };
 
   return (
     <div className="flex min-h-full flex-col bg-ground">
       <header className="gutter sticky z-30 border-b border-rule bg-sheet" style={{ top: 'env(safe-area-inset-top, 0px)' }}>
         <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3">
           <img src={crest} alt="" className="h-8 w-8 object-contain" />
-          <p className="font-display text-lg font-semibold">
+          <p className="min-w-0 truncate font-display text-lg font-semibold">
             Canadian Diploma <span className="font-body text-sm font-normal text-ink-3">· Admin</span>
           </p>
           <div className="ml-auto flex items-center gap-2">
-            <Link to="/" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-ink-2 hover:text-blue">
+            <Link to="/" className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-ink-2 hover:text-blue">
               View site <ExternalLink size={14} aria-hidden />
             </Link>
             {state.status === 'admin' && (
               <button
                 type="button"
-                onClick={signOut}
+                onClick={leave}
                 className="inline-flex items-center gap-1.5 rounded-full border border-rule px-3 py-1.5 text-sm font-semibold text-ink-2 hover:border-blue hover:text-blue"
               >
                 <LogOut size={14} aria-hidden /> Sign out
@@ -63,10 +72,10 @@ export function AdminLayout() {
       )}
 
       <div className="gutter flex-1">
-        <div className="mx-auto grid max-w-[1280px] gap-6 py-6 lg:grid-cols-[230px_1fr]">
+        <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 py-6 lg:grid-cols-[230px_1fr]">
           {state.status === 'admin' || state.status === 'demo' ? (
             <>
-              <nav aria-label="Admin" className="lg:sticky lg:top-20 lg:self-start">
+              <nav aria-label="Admin" className="min-w-0 lg:sticky lg:top-20 lg:self-start">
                 <ul className="flex gap-1 overflow-x-auto pb-2 lg:grid lg:overflow-visible lg:pb-0">
                   {NAV.map((n) => (
                     <li key={n.to} className="shrink-0">
@@ -97,7 +106,7 @@ export function AdminLayout() {
             </>
           ) : (
             <div className="lg:col-span-2">
-              <Gate state={state} onSignIn={signIn} onSignOut={signOut} />
+              <Gate state={state} onSignOut={leave} />
             </div>
           )}
         </div>
@@ -106,36 +115,77 @@ export function AdminLayout() {
   );
 }
 
-function Gate({ state, onSignIn, onSignOut }: { state: AdminState; onSignIn: () => void; onSignOut: () => void }) {
+function Gate({ state, onSignOut }: { state: AdminState; onSignOut: () => void }) {
   return (
-    <div className="mx-auto grid max-w-[480px] gap-4 rounded-2xl border border-rule bg-sheet p-8 text-center">
-      {state.status === 'loading' && <p role="status">Checking your sign-in…</p>}
-      {state.status === 'signed-out' && (
-        <>
-          <h1 className="t-h2">Staff sign-in</h1>
-          <p className="text-ink-2">Sign in with your IMAS Google account to edit the Canadian Diploma website.</p>
-          <button
-            type="button"
-            onClick={onSignIn}
-            className="mx-auto inline-flex min-h-11 items-center rounded-full bg-blue px-6 font-semibold text-on-blue hover:bg-blue-deep"
-          >
-            Sign in with Google
-          </button>
-          {state.error && <p className="text-sm text-maroon">Sign-in didn’t work: {state.error}</p>}
-        </>
+    <div className="mx-auto grid max-w-[480px] gap-4 rounded-2xl border border-rule bg-sheet p-6 sm:p-8">
+      {state.status === 'loading' && (
+        <p role="status" className="text-center">
+          Checking your sign-in…
+        </p>
       )}
-      {state.status === 'not-admin' && (
+      {state.status === 'signed-out' && <StaffSignIn />}
+      {(state.status === 'not-admin' || state.status === 'error') && (
         <>
-          <h1 className="t-h2">No editing access yet</h1>
+          <h1 className="t-h2">No editing access</h1>
           <p className="text-ink-2">
-            You are signed in as <strong className="text-ink">{state.email}</strong>, but this account is not an editor. Ask an existing editor to add
-            your email under <em>Admins</em> in Supabase, then sign in again.
+            You are signed in as <strong className="text-ink">{state.email}</strong>, but this account can’t edit the website. Student accounts can’t open
+            the admin panel. If you are staff, ask an editor to add your email to the editors list (see the Hosting &amp; Maintenance Guide).
           </p>
-          <button type="button" onClick={onSignOut} className="mx-auto rounded-full border border-rule px-5 py-2 font-semibold hover:border-blue">
+          {state.status === 'error' && <p className="text-sm text-maroon">Database error: {state.message}</p>}
+          <button type="button" onClick={onSignOut} className="w-fit rounded-full border border-rule px-5 py-2 font-semibold hover:border-blue">
             Sign out
           </button>
         </>
       )}
     </div>
+  );
+}
+
+function StaffSignIn() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    const err = await signIn(email, password);
+    setBusy(false);
+    if (err) setError(err.replace('That ID', 'That email'));
+  }
+
+  return (
+    <form onSubmit={submit} className="grid gap-4" noValidate>
+      <div className="grid gap-1">
+        <h1 className="t-h2">Staff sign-in</h1>
+        <p className="text-ink-2">Sign in with your IMAS email to edit the Canadian Diploma website.</p>
+      </div>
+      <div className="grid gap-1.5">
+        <label htmlFor="staff-email" className="font-semibold">
+          Email
+        </label>
+        <input
+          id="staff-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="username"
+          placeholder="name@imas.edu.my"
+          className="min-h-11 rounded-lg border border-rule-strong bg-sheet px-3"
+        />
+      </div>
+      <PasswordInput id="staff-password" label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
+      {error && (
+        <p role="alert" className="rounded-lg bg-maroon-tint px-3 py-2 text-sm text-maroon">
+          {error}
+        </p>
+      )}
+      <button type="submit" disabled={busy} className="min-h-11 w-fit rounded-full bg-blue px-6 font-semibold text-on-blue hover:bg-blue-deep disabled:opacity-60">
+        {busy ? 'Signing in…' : 'Sign in'}
+      </button>
+      <p className="text-sm text-ink-3">Forgotten your password? Another editor can set a new one for you in Supabase (see the guide).</p>
+    </form>
   );
 }

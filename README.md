@@ -1,6 +1,6 @@
 # IMAS Canadian Diploma website
 
-The guide to the New Brunswick (Canada) High School Diploma at IMAS International School, for new and current students. Stage 1 of a two-stage programme. Stage 2 adds a student portal.
+The guide to the New Brunswick (Canada) High School Diploma at IMAS International School, for new and current students. Stage 1 of a two-stage programme. Stage 2 is the Student Portal; its first part, student sign-in, is built.
 
 **Hosting and day-to-day editing:** see [docs/HOSTING-AND-MAINTENANCE-GUIDE.md](docs/HOSTING-AND-MAINTENANCE-GUIDE.md).
 
@@ -9,12 +9,14 @@ The guide to the New Brunswick (Canada) High School Diploma at IMAS Internationa
 | Part | Where |
 |---|---|
 | Public site: eight chapters and two appendices, read like a book with page turns | `src/pages`, `src/components` |
-| Admin panel at `/admin` (Google sign-in, editors listed in Supabase) | `src/admin` |
+| Admin panel at `/admin` (email and password sign-in, editors listed in Supabase) | `src/admin` |
+| Student Portal at `/portal` (Student ID + password; students must replace their first password) | `src/pages/Portal.tsx`, `src/lib/auth.ts`, `src/lib/students.ts` |
+| Server function that creates student accounts and sets passwords | `supabase/functions/manage-students/` |
 | Content model and built-in content | `src/content/types.ts`, `src/content/seed/` |
 | Database tables, security rules, seed | `supabase/` |
 | Tests | `tests/` (unit), `tests/e2e/` (browser), `supabase/tests/` (database rules) |
 
-Without database settings the site runs on its built-in content, and the admin panel works in demo mode, so changes are not saved.
+Without database settings the site runs on its built-in content, and the admin panel and Student Portal work in demo mode (sign in as `260001` / `A1234567`), so changes are not saved.
 
 ## Commands
 

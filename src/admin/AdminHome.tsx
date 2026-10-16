@@ -1,7 +1,9 @@
-import { AlertTriangle, CheckCircle2, Database, Download } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Database, Download, KeyRound } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { PasswordInput } from '../components/PasswordInput';
 import { contentProblems } from '../content/derive';
+import { changeStaffPassword } from '../lib/auth';
 import { isPreviewBuild, supabaseConfigured } from '../lib/supabase';
 import { useAdmin } from './AdminLayout';
 import { COLLECTIONS, COLLECTION_ORDER } from './collections';
@@ -63,6 +65,12 @@ export function AdminHome() {
               <span className="text-sm text-ink-2">Contact details, IELTS band, assessment weights and other key figures.</span>
             </Link>
           </li>
+          <li>
+            <Link to="/admin/students" className="grid h-full gap-1 rounded-xl border border-rule bg-sheet p-5 hover:border-blue">
+              <span className="font-semibold">Students</span>
+              <span className="text-sm text-ink-2">Student Portal accounts: add students from a spreadsheet, reset passwords.</span>
+            </Link>
+          </li>
           {COLLECTION_ORDER.map((k) => (
             <li key={k}>
               <Link to={`/admin/${k}`} className="grid h-full gap-1 rounded-xl border border-rule bg-sheet p-5 hover:border-blue">
@@ -116,6 +124,49 @@ export function AdminHome() {
           </p>
         )}
       </section>
+
+      {auth.status === 'admin' && <StaffPassword />}
     </div>
+  );
+}
+
+function StaffPassword() {
+  const [pw, setPw] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (pw !== confirm) return setMsg({ ok: false, text: 'The two passwords don’t match.' });
+    setBusy(true);
+    const err = await changeStaffPassword(pw);
+    setBusy(false);
+    setMsg(err ? { ok: false, text: err } : { ok: true, text: 'Your new password is saved.' });
+    if (!err) {
+      setPw('');
+      setConfirm('');
+    }
+  }
+
+  return (
+    <section className="grid gap-3 rounded-2xl border border-rule bg-sheet p-6">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <KeyRound size={18} aria-hidden className="text-blue" /> Your password
+      </h2>
+      <p className="text-ink-2">If another editor set up your account, replace the password they gave you with your own.</p>
+      <form onSubmit={submit} className="grid max-w-[440px] gap-3" noValidate>
+        <PasswordInput id="staff-new-password" label="New password" value={pw} onChange={setPw} autoComplete="new-password" help="At least 8 characters." />
+        <PasswordInput id="staff-confirm-password" label="Type it again" value={confirm} onChange={setConfirm} autoComplete="new-password" />
+        <button type="submit" disabled={busy} className="w-fit rounded-full bg-blue px-5 py-2.5 font-semibold text-on-blue hover:bg-blue-deep disabled:opacity-60">
+          {busy ? 'Saving…' : 'Change my password'}
+        </button>
+        {msg && (
+          <p role={msg.ok ? 'status' : 'alert'} className={`text-sm ${msg.ok ? 'text-green-ink' : 'text-maroon'}`}>
+            {msg.text}
+          </p>
+        )}
+      </form>
+    </section>
   );
 }

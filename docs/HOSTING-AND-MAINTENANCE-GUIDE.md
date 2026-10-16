@@ -11,9 +11,9 @@ No programming is needed for day-to-day work.
 |---|---|---|
 | **GitHub** | Stores the website's code. | Claude makes code changes here when you ask. |
 | **Netlify** | Puts the website on the internet. It rebuilds the site automatically whenever the code on GitHub changes. | Set up once. |
-| **Supabase** | The database: subjects, tracks, universities, FAQs, announcements, settings and the list of editors. Also handles Google sign-in. | You edit it through the site's admin panel. |
-| **Google Workspace** | Staff sign in to the admin panel with their @imas.edu.my accounts. | IT, once. |
-| **School DNS** | Points `canadian.imas.edu.my` at Netlify. | IT, once. |
+| **Supabase** | The database: subjects, tracks, universities, FAQs, announcements, settings, the list of editors and the student accounts. Also handles sign-in (email and password) for staff and students. | You edit it through the site's admin panel. |
+| **manage-students** | A small server function inside Supabase that creates student accounts and sets passwords. It holds the secret key, so the key is never in the website. | Set up once (copy and paste). |
+| **School DNS** (optional) | Points `canadian.imas.edu.my` at Netlify. | IT, once. |
 
 Two kinds of change:
 
@@ -36,23 +36,22 @@ Do these in order. Steps marked **IT** need the school's IT team.
    - Name: `imas-canadian-diploma`
    - Region: **Southeast Asia (Singapore)**, closest to Malaysia
    - Save the database password somewhere safe (for example a password manager).
-2. Open **SQL Editor → New query**. Paste the whole of `supabase/migrations/0001_content.sql` and click **Run**.
-3. Start another new query. Paste the whole of `supabase/seed.sql` and click **Run**. This loads all the content from this guide's first version.
-4. Open `supabase/add-first-admin.sql`, change the email to **your own** IMAS Google address (lower case), paste it into a new query and click **Run**. You are now the first editor.
-5. Go to **Project Settings → API** (or **API Keys**) and copy two values for Step 4:
+2. Open **SQL Editor → New query**. Paste the whole of each file below, in this order, clicking **Run** after each one (start a new query each time):
+   1. `supabase/migrations/0001_content.sql`: the content tables and their security rules
+   2. `supabase/seed.sql`: all the content from this guide's first version
+   3. `supabase/migrations/0002_students.sql`: the student accounts table and its security rules
+3. **Turn off public sign-ups.** Open **Authentication → Sign In / Providers**. Under **User Signups**, switch **Allow new users to sign up** **off** and save. Only editors can create accounts. Check that **Email** is enabled under **Auth Providers** (it is by default).
+4. **Create your own staff sign-in.** Open **Authentication → Users → Add user → Create new user**. Enter your IMAS email and a password, tick **Auto Confirm User**, and click **Create user**.
+5. Open `supabase/add-first-admin.sql`, change the email to that same email (lower case), paste it into a new SQL query and click **Run**. You are now the first editor.
+6. Go to **Project Settings → API** (or **API Keys**) and copy two values for Step 4:
    - the **Project URL**
    - the **anon / publishable** key (the public one). **Never** use the `service_role` or secret key on the website.
 
-### Step 3: Google sign-in (**IT**)
-1. In <https://console.cloud.google.com>, create a project called `IMAS Canadian Diploma`.
-2. Open **Google Auth Platform** (OAuth consent screen). Set **Audience / User type: Internal**, so only @imas.edu.my accounts can sign in.
-3. Create an **OAuth client**, type **Web application**:
-   - **Authorised JavaScript origins:** `https://canadian.imas.edu.my`
-   - **Authorised redirect URI:** the callback URL shown in Supabase under **Authentication → Sign In / Providers → Google**. It looks like `https://<your-project>.supabase.co/auth/v1/callback`.
-4. Copy the **Client ID** and **Client secret** into Supabase (**Authentication → Sign In / Providers → Google**), switch Google **on** and save.
-5. In Supabase, open **Authentication → URL Configuration**:
-   - **Site URL:** `https://canadian.imas.edu.my`
-   - **Redirect URLs:** add `https://canadian.imas.edu.my/admin` and the Netlify address from Step 4 followed by `/admin`.
+### Step 3: The student accounts function (copy and paste, about 5 minutes)
+1. In Supabase, open **Edge Functions → Deploy a new function → Via Editor**.
+2. Name it exactly `manage-students`.
+3. Delete the example code. Open `supabase/functions/manage-students/index.ts` on GitHub, copy all of it, paste it in, and click **Deploy function**.
+4. That's all. Supabase gives the function its keys automatically, and the secret key stays on Supabase's servers.
 
 ### Step 4: Netlify (puts the site online)
 1. Create an account at <https://www.netlify.com> and sign in with GitHub.
@@ -64,15 +63,23 @@ Do these in order. Steps marked **IT** need the school's IT team.
 4. Click **Deploy**. After a minute or two the site is live at an address like `imas-canadian-diploma.netlify.app`.
    If you add or change environment variables later, go to **Deploys → Trigger deploy** so they take effect.
 
-### Step 5: The school address (**IT**)
-1. In Netlify, open **Domain management → Add a domain** and enter `canadian.imas.edu.my`.
-2. IT adds the DNS record Netlify shows, usually a **CNAME** from `canadian` to `<your-site>.netlify.app`.
-3. Netlify turns on HTTPS (the padlock) automatically within about an hour.
+### Step 5: The website address (free)
+You don't need to buy anything. Choose one:
+- **Netlify address (free, works straight away):** in Netlify open **Site configuration → Change site name**, for example `imas-canadian` → `imas-canadian.netlify.app`.
+- **School address (free, needs IT once):** IMAS already owns `imas.edu.my`, so `canadian.imas.edu.my` costs nothing.
+  1. In Netlify, open **Domain management → Add a domain** and enter `canadian.imas.edu.my`.
+  2. IT adds the DNS record Netlify shows, usually a **CNAME** from `canadian` to `<your-site>.netlify.app`.
+  3. Netlify turns on HTTPS (the padlock) automatically within about an hour.
+
+**You don't need Supabase's "Custom Domain" add-on.** It only renames the database's behind-the-scenes address (`…supabase.co`), which visitors never see. Students and staff only ever see the website address above.
+
+Finally, in Supabase open **Authentication → URL Configuration** and set **Site URL** to the address you chose.
 
 ### Step 6: Check it works
-1. Open `https://canadian.imas.edu.my` and turn a few pages.
-2. Open `https://canadian.imas.edu.my/admin` and sign in. The dashboard should say **Connected to the database**.
+1. Open the site and turn a few pages.
+2. Open `/admin` and sign in with the email and password from Step 2. The dashboard should say **Connected to the database**.
 3. Change one FAQ, save it, then open the FAQ page to see the change.
+4. In **Students**, add one test student (see section 3), sign in as them at `/portal`, create a password, then remove the test student.
 
 ---
 
@@ -100,9 +107,31 @@ Sign in at **canadian.imas.edu.my/admin** (or use **Staff sign-in** at the botto
 
 **Deleting a course** also removes it from every cohort plan that uses it. The admin panel warns you first.
 
+### Student accounts (admin → **Students**)
+Each student signs in with their **Student ID** (their account is `StudentID@imas.edu.my`). Their first password is their **ID number** (IC or passport). The first time they sign in, the portal makes them create their own password. Until they do, the portal stays locked; they can only sign out.
+
+**Adding students (for example, all 300 at the start of the year)**
+1. In Excel or Google Sheets, make columns headed **Student ID**, **Full name**, **ID number**, and optionally **Track** (for example `CAN Grade 10` or `cad-sci-g11`).
+2. Select the rows including the heading row, copy, and paste them into **Paste the rows here** (or choose a CSV file).
+3. Check the preview. Rows with problems are listed and left out until fixed.
+4. Click **Create … accounts**. Accounts are created 25 at a time, so 300 students take a minute or two. Students who already have an account are skipped, so you can paste the whole list again safely when new students join.
+
+**What to tell students:** go to the website → **Student Hub → Sign in to the portal** (or **Student sign-in** at the bottom of any page). Type your Student ID and your ID number, then create your own password: at least 8 characters, letters and numbers, not your Student ID.
+
+**A student forgot their password:** open **Students**, click the student, type a temporary password (for example their ID number) and click **Reset password**. They create a new one when they next sign in.
+
+**Leavers:** click the student → **Remove student**. This deletes their sign-in account.
+
+**Important:** the first password must be something only the student knows, such as their IC or passport number. If it were the same as their Student ID, anyone who knows the ID could sign in before the student does.
+
 ### Adding another editor
-In Supabase open **Table Editor → admins → Insert row**, type their IMAS email in lower case and save.
-They can then sign in at `/admin`. To remove an editor, delete their row.
+1. In Supabase open **Authentication → Users → Add user → Create new user**. Enter their IMAS email and a temporary password, tick **Auto Confirm User**, and create the user.
+2. Open **Table Editor → admins → Insert row**, type the same email in lower case and save.
+3. Give them the temporary password privately. After signing in at `/admin`, they can set their own under **Your password** on the dashboard.
+
+To remove an editor, delete their row in **admins** (and their user in **Authentication → Users**).
+
+**An editor forgot their password:** another editor deletes their user in **Authentication → Users** and adds it again with a new temporary password (step 1 above). Their editor access stays, because it is linked to the email.
 
 ---
 
@@ -121,7 +150,9 @@ They can then sign in at `/admin`. To remove an editor, delete their row.
 | GitHub | Free (private repository) | Free |
 | Netlify | Free plan is usually enough | Free or paid, depending on traffic |
 | Supabase | Free plan works. Free projects may be paused after a period of inactivity. | **Pro recommended**: daily backups, no pausing, more capacity |
-| Google sign-in | Free with Google Workspace | Free |
+| Sign-in for staff and 300 students | Included in Supabase, well within the free plan's limits | Included |
+| Website address | Free: `….netlify.app`, or `canadian.imas.edu.my` (IMAS already owns the domain) | Free |
+| Supabase "Custom Domain" add-on | **Not needed** (it only renames the hidden database address) | Not needed |
 | AI academic advisor | — | Pay-as-you-go Claude API usage |
 
 ---
@@ -132,9 +163,12 @@ They can then sign in at `/admin`. To remove an editor, delete their row.
 |---|---|
 | An edit doesn't show on the site | Reload the page. Pages already open in another tab refresh their content after a reload. |
 | Admin dashboard says **built-in content** | The site can't reach the database. Check that the Supabase project isn't paused (Supabase dashboard), and that both environment variables are set in Netlify, then **Trigger deploy**. |
-| **No editing access yet** after signing in | That email isn't in the `admins` table. Add it (section 3), in lower case. |
-| Google shows **redirect_uri_mismatch** | The redirect URI in Google Cloud must exactly match the callback URL shown in Supabase (Step 3). |
-| Google says the app is restricted | You signed in with a personal Gmail account. Use your @imas.edu.my account. |
+| **No editing access** after signing in | That email isn't in the `admins` table. Add it (section 3), in lower case. |
+| Staff sign-in says the email or password isn't right | Check the user exists in **Authentication → Users** and is confirmed. If the password is forgotten, see "An editor forgot their password" (section 3). |
+| A student's sign-in says the ID or password isn't right | Check their Student ID in **Students**. If needed, reset their password. |
+| **Students** page says the student accounts function isn't set up | Do Step 3 (the function must be named exactly `manage-students`). |
+| **Students** page says your sign-in has expired, or **Invalid JWT** | Sign out of the admin panel and sign in again. If it keeps happening, open **Edge Functions → manage-students → Details** in Supabase and switch off **Verify JWT** (sometimes called **Enforce JWT verification**). The function checks who is signed in by itself. |
+| Import says an email "already has a sign-in account that isn't linked to a student" | Delete that user in **Authentication → Users**, then paste the student again. |
 | Site is down after a code change | In Netlify → Deploys, publish the previous deploy, then tell Claude what happened. |
 
 ---
@@ -153,7 +187,7 @@ Claude makes the change, runs the tests and pushes to GitHub, and Netlify publis
 
 ## 8. Stage 2 at a glance (planned)
 
-- **Student sign-in** with @imas.edu.my Google accounts, using the same Supabase project.
+- **Student sign-in: done.** Student ID and password, with a forced change of the first password (section 3).
 - **Student profiles:** cohort, courses completed and in progress, grades per course (continuous assessment and final exam), credit-hours earned out of 100, IELTS status, projected graduation date.
 - **Academic calendar** for each year, edited in the admin panel.
 - **AI academic advisor:** personal suggestions for improving, based on the student's own results. It runs on the server so the API key is never exposed, and teachers can review its notes.
