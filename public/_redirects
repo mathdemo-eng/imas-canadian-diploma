@@ -1,0 +1,2 @@
+# Single-page app: every address loads index.html (used by drag-and-drop deploys; netlify.toml covers Git deploys).
+/*    /index.html    200
