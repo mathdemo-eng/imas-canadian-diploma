@@ -126,16 +126,21 @@ function splitLine(line: string, sep: string): string[] {
   return out.map((c) => c.trim());
 }
 
-/** "Dual Program · Science · Grade 10 entry", "CAD Science G10" and "cad-sci-g10" all become "cadscig10". */
+const TRACK_WORDS: Record<string, string> = { dual: 'cad', science: 'sci', commerce: 'com' };
+const IGNORED_WORDS = new Set(['entry', 'program', 'programme', 'stream', 'track', 'cohort']);
+
+/**
+ * The words of a track name, in any order: "Grade 10 CAN", "CAN · Grade 10 entry", "can g10" and
+ * "CAN 10" all become "can g10"; "Dual Science Gr 11" and "cad-sci-g11" both become "cad g11 sci".
+ */
 function trackKey(s: string) {
-  return s
+  const words = s
     .toLowerCase()
-    .replace(/\b(entry|program|programme|stream)\b/g, '')
-    .replace(/\bdual\b/g, 'cad')
-    .replace(/\bscience\b/g, 'sci')
-    .replace(/\bcommerce\b/g, 'com')
-    .replace(/\bgrade\s*/g, 'g')
-    .replace(/[^a-z0-9]/g, '');
+    .replace(/\b(grade|gr|year)\s*\.?\s*(\d+)/g, 'g$2')
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w && !IGNORED_WORDS.has(w))
+    .map((w) => TRACK_WORDS[w] ?? (/^\d+$/.test(w) ? `g${w}` : w));
+  return [...new Set(words)].sort().join(' ');
 }
 
 /**

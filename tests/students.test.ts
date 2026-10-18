@@ -44,6 +44,19 @@ describe('reading a pasted student list', () => {
     ]);
   });
 
+  it('recognises a track whatever the word order', () => {
+    const text = [
+      'Student ID\tFull name\tID number\tTrack',
+      'S2510007\tA\t080512101234\tGrade 10 CAN',
+      'S2510008\tB\t080512101235\tGr 11 CAN',
+      'S2510009\tC\t080512101236\tScience Dual Grade 11',
+      'S2510010\tD\t080512101237\tCAN 10',
+    ].join('\n');
+    const { rows, problems } = parseStudentList(text, tracks);
+    expect(problems).toEqual([]);
+    expect(rows.map((r) => r.track_id)).toEqual(['can-g10', 'can-g11', 'cad-sci-g11', 'can-g10']);
+  });
+
   it('reads a CSV file with quoted names and other heading words', () => {
     const text = 'name,student id,IC\r\n"Tan, Mei Ling",260010,080808088888\r\n';
     expect(parseStudentList(text, tracks).rows).toEqual([{ student_id: '260010', full_name: 'Tan, Mei Ling', password: '080808088888', track_id: null }]);
