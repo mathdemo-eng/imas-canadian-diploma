@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { demo } from './demo-backend';
 import { callStudentsFunction } from './server-function';
-import { getSupabase, supabaseConfigured } from './supabase';
+import { getSupabase, supabaseConfigured, supabaseTarget } from './supabase';
 
 /** Student accounts are <Student ID>@imas.edu.my. */
 export const SCHOOL_DOMAIN = 'imas.edu.my';
@@ -17,7 +17,23 @@ export interface SignedInUser {
   email: string;
 }
 
-export type AuthState = { status: 'loading' } | { status: 'signed-out' } | { status: 'signed-in'; user: SignedInUser };
+export type AuthState = { status: 'loading' } | { status: 'signed-out'; error?: string } | { status: 'signed-in'; user: SignedInUser };
+
+/** How long to wait for the sign-in service before saying it isn't answering. */
+const CONNECT_TIMEOUT_MS = 15_000;
+
+/** A plain-language reason the site couldn't reach its database and sign-in service. */
+export function connectionProblem(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/supabaseUrl/i.test(msg)) {
+    return `The database address saved in Netlify (VITE_SUPABASE_URL) isn’t valid: “${supabaseTarget}”. It should be the Supabase Project URL, which looks like https://abcdefghijkl.supabase.co`;
+  }
+  if (/supabaseKey/i.test(msg)) return 'The database key saved in Netlify (VITE_SUPABASE_ANON_KEY) is missing.';
+  if (/fetch|network|load failed/i.test(msg)) {
+    return `The website couldn’t reach its database at ${supabaseTarget}. Check your internet connection, and that the Supabase project isn’t paused.`;
+  }
+  return `The website couldn’t connect to its database (${supabaseTarget}): ${msg}`;
+}
 
 /** Who is signed in. Updates when someone signs in or out. */
 export function useAuth(): AuthState {
@@ -36,18 +52,34 @@ export function useAuth(): AuthState {
 
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
-    getSupabase().then(async (sb) => {
-      const apply = (s: { user: { id: string; email?: string } } | null) => {
-        if (cancelled) return;
-        setState(s?.user ? { status: 'signed-in', user: { id: s.user.id, email: s.user.email ?? '' } } : { status: 'signed-out' });
-      };
-      const { data } = await sb.auth.getSession();
-      apply(data.session);
-      const sub = sb.auth.onAuthStateChange((_event, session) => apply(session));
-      unsubscribe = () => sub.data.subscription.unsubscribe();
-    });
+    // Never leave the page on "Checking your sign-in…": say what went wrong instead.
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      setState((s) =>
+        s.status === 'loading'
+          ? { status: 'signed-out', error: `The sign-in service at ${supabaseTarget} didn’t answer. Check your internet connection, and that the Supabase project isn’t paused.` }
+          : s,
+      );
+    }, CONNECT_TIMEOUT_MS);
+    getSupabase()
+      .then(async (sb) => {
+        const apply = (s: { user: { id: string; email?: string } } | null) => {
+          if (cancelled) return;
+          setState(s?.user ? { status: 'signed-in', user: { id: s.user.id, email: s.user.email ?? '' } } : { status: 'signed-out' });
+        };
+        const { data } = await sb.auth.getSession();
+        apply(data.session);
+        const sub = sb.auth.onAuthStateChange((_event, session) => apply(session));
+        unsubscribe = () => sub.data.subscription.unsubscribe();
+      })
+      .catch((e: unknown) => {
+        console.error('Sign-in service unavailable', e);
+        if (!cancelled) setState({ status: 'signed-out', error: connectionProblem(e) });
+      })
+      .finally(() => clearTimeout(timer));
     return () => {
       cancelled = true;
+      clearTimeout(timer);
       unsubscribe?.();
     };
   }, []);
@@ -68,11 +100,17 @@ export async function signIn(identifier: string, password: string): Promise<stri
     return null;
   }
 
-  const sb = await getSupabase();
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if (!error) return null;
-  if (/invalid login credentials/i.test(error.message)) return 'That ID or password isn’t right. Check them and try again.';
-  return `Sign-in didn’t work: ${error.message}`;
+  try {
+    const sb = await getSupabase();
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (!error) return null;
+    if (/invalid login credentials/i.test(error.message)) return 'That ID or password isn’t right. Check them and try again.';
+    if (/email not confirmed/i.test(error.message)) return 'This account hasn’t been confirmed yet. In Supabase → Authentication → Users, confirm the user (or add it again with “Auto Confirm User” ticked).';
+    if (/fetch|network/i.test(error.message)) return connectionProblem(error);
+    return `Sign-in didn’t work: ${error.message}`;
+  } catch (e) {
+    return connectionProblem(e);
+  }
 }
 
 export async function signOut() {

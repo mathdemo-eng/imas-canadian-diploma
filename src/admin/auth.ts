@@ -5,7 +5,7 @@ import { getSupabase, supabaseConfigured } from '../lib/supabase';
 export type AdminState =
   | { status: 'demo' }
   | { status: 'loading' }
-  | { status: 'signed-out' }
+  | { status: 'signed-out'; error?: string }
   | { status: 'error'; email: string; message: string }
   | { status: 'not-admin'; email: string }
   | { status: 'admin'; email: string };
@@ -30,7 +30,7 @@ export function useAdminAuth(): AdminState {
 
   if (!supabaseConfigured) return { status: 'demo' };
   if (auth.status === 'loading') return { status: 'loading' };
-  if (auth.status === 'signed-out') return { status: 'signed-out' };
+  if (auth.status === 'signed-out') return { status: 'signed-out', error: auth.error };
   if (check.isPending) return { status: 'loading' };
   if (check.isError) return { status: 'error', email, message: check.error.message };
   return check.data ? { status: 'admin', email } : { status: 'not-admin', email };

@@ -123,6 +123,17 @@ function Gate({ state, onSignOut }: { state: AdminState; onSignOut: () => void }
           Checking your sign-in…
         </p>
       )}
+      {state.status === 'signed-out' && state.error && (
+        <div role="alert" className="grid gap-2 rounded-xl border-l-4 border-maroon bg-maroon-tint px-4 py-3 text-sm">
+          <p className="font-semibold text-ink">The website can’t connect to its database</p>
+          <p className="text-ink-2">{state.error}</p>
+          <p className="text-ink-2">
+            To fix it: in Netlify open <strong>Project configuration → Environment variables</strong>, check that <code className="font-mono">VITE_SUPABASE_URL</code> is
+            the Supabase Project URL and <code className="font-mono">VITE_SUPABASE_ANON_KEY</code> is the publishable key, then go to{' '}
+            <strong>Deploys → Trigger deploy → Deploy project</strong>.
+          </p>
+        </div>
+      )}
       {state.status === 'signed-out' && <StaffSignIn />}
       {(state.status === 'not-admin' || state.status === 'error') && (
         <>

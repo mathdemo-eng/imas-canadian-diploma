@@ -6,6 +6,16 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 /** True on preview builds (private Artifact link): always read-only built-in content. */
 export const isPreviewBuild = import.meta.env.VITE_PREVIEW_BUILD === 'true';
 
+/** The database address the site was built with (e.g. abcd.supabase.co), for error messages. */
+export const supabaseTarget = (() => {
+  if (!url) return '';
+  try {
+    return new URL(url).host || url;
+  } catch {
+    return url.length > 60 ? `${url.slice(0, 60)}…` : url;
+  }
+})();
+
 /** True when the site is connected to its Supabase database. */
 export const supabaseConfigured = Boolean(url && anonKey) && !isPreviewBuild;
 

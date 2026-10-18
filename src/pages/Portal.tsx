@@ -24,7 +24,18 @@ export function Portal() {
   if (auth.status === 'loading' || (userId && student.isLoading)) {
     body = <p role="status" className="text-ink-3">Checking your sign-in…</p>;
   } else if (auth.status === 'signed-out') {
-    body = <SignInForm />;
+    body = (
+      <>
+        {auth.error && (
+          <div role="alert" className="grid gap-1 rounded-xl border-l-4 border-maroon bg-maroon-tint px-5 py-4">
+            <p className="t-h3">The portal can’t connect right now</p>
+            <p className="text-ink-2">Please try again later, or tell the Canadian Diploma coordinator.</p>
+            <p className="text-sm text-ink-3">{auth.error}</p>
+          </div>
+        )}
+        <SignInForm />
+      </>
+    );
   } else if (student.isError) {
     body = <Notice title="Your portal couldn’t be loaded" text={(student.error as Error).message} />;
   } else if (!student.data) {
