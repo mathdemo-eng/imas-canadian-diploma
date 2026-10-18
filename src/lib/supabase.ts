@@ -1,7 +1,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+/**
+ * The Project URL, accepting common slips when it was pasted into Netlify: just the project ID
+ * ("abcdefghijkl" → https://abcdefghijkl.supabase.co), no https://, or a trailing /rest/v1.
+ */
+export function normaliseSupabaseUrl(raw: string | undefined): string | undefined {
+  const v = raw?.trim().replace(/\/+$/, '').replace(/\/(rest|auth)\/v1$/i, '');
+  if (!v) return undefined;
+  if (/^[a-z0-9]{15,40}$/i.test(v)) return `https://${v.toLowerCase()}.supabase.co`;
+  if (!/^https?:\/\//i.test(v)) return `https://${v}`;
+  return v;
+}
+
+const url = normaliseSupabaseUrl(import.meta.env.VITE_SUPABASE_URL as string | undefined);
+const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
 
 /** True on preview builds (private Artifact link): always read-only built-in content. */
 export const isPreviewBuild = import.meta.env.VITE_PREVIEW_BUILD === 'true';

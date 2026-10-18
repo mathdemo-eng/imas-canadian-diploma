@@ -100,3 +100,14 @@ describe('demo sign-in (no database)', () => {
     await signOut();
   });
 });
+
+describe('database address from Netlify', () => {
+  it('accepts the Project URL, or common slips when it was pasted', async () => {
+    const { normaliseSupabaseUrl } = await import('../src/lib/supabase');
+    expect(normaliseSupabaseUrl('https://aazcizznxzhkonwbzkiu.supabase.co')).toBe('https://aazcizznxzhkonwbzkiu.supabase.co');
+    expect(normaliseSupabaseUrl('aazcizznxzhkonwbzkiu')).toBe('https://aazcizznxzhkonwbzkiu.supabase.co');
+    expect(normaliseSupabaseUrl(' aazcizznxzhkonwbzkiu.supabase.co/ ')).toBe('https://aazcizznxzhkonwbzkiu.supabase.co');
+    expect(normaliseSupabaseUrl('https://aazcizznxzhkonwbzkiu.supabase.co/rest/v1/')).toBe('https://aazcizznxzhkonwbzkiu.supabase.co');
+    expect(normaliseSupabaseUrl('')).toBeUndefined();
+  });
+});

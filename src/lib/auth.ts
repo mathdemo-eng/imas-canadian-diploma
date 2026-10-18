@@ -107,6 +107,9 @@ export async function signIn(identifier: string, password: string): Promise<stri
     if (/invalid login credentials/i.test(error.message)) return 'That ID or password isn’t right. Check them and try again.';
     if (/email not confirmed/i.test(error.message)) return 'This account hasn’t been confirmed yet. In Supabase → Authentication → Users, confirm the user (or add it again with “Auto Confirm User” ticked).';
     if (/fetch|network/i.test(error.message)) return connectionProblem(error);
+    if (/invalid api key|no api key|api key/i.test(error.message)) {
+      return 'The database key saved in Netlify (VITE_SUPABASE_ANON_KEY) isn’t right. Use the publishable key from Supabase → Project Settings → API Keys, then trigger a new deploy.';
+    }
     return `Sign-in didn’t work: ${error.message}`;
   } catch (e) {
     return connectionProblem(e);
