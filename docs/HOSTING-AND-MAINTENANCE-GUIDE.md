@@ -71,6 +71,8 @@ You don't need to buy anything. Choose one:
   2. IT adds the DNS record Netlify shows, usually a **CNAME** from `canadian` to `<your-site>.netlify.app`.
   3. Netlify turns on HTTPS (the padlock) automatically within about an hour.
 
+- **Your own domain, no IT needed (about US$10–20 a year):** buy a name such as `imascanadian.com`. The simplest way is inside Netlify: **Domain management → Add a domain → Register a new domain**. Netlify shows the yearly price before you pay, then sets up the address and HTTPS by itself. Register it to a school email (not a personal one) and keep **auto-renew** on, so the site never goes offline because a renewal was missed. Then click **Set as primary domain**; the `.netlify.app` address keeps working and forwards to the new one.
+
 **You don't need Supabase's "Custom Domain" add-on.** It only renames the database's behind-the-scenes address (`…supabase.co`), which visitors never see. Students and staff only ever see the website address above.
 
 Finally, in Supabase open **Authentication → URL Configuration** and set **Site URL** to the address you chose.
@@ -80,6 +82,13 @@ Finally, in Supabase open **Authentication → URL Configuration** and set **Sit
 2. Open `/admin` and sign in with the email and password from Step 2. The dashboard should say **Connected to the database**.
 3. Change one FAQ, save it, then open the FAQ page to see the change.
 4. In **Students**, add one test student (see section 3), sign in as them at `/portal`, create a password, then remove the test student.
+
+### Step 7: Get found on Google (optional, 10 minutes)
+A new website is invisible on Google until Google has visited it, which can take days or weeks. To speed this up:
+1. Open <https://search.google.com/search-console> and sign in with a school Google account.
+2. **Add property → URL prefix**, enter the site's address, and choose the **HTML tag** check. Send the tag to Claude, who adds it to the site; then click **Verify**.
+3. Open **Sitemaps**, type `sitemap.xml` and click **Submit**. The site makes this list of pages automatically.
+4. Optional: paste the home page address into the search bar at the top and click **Request indexing**.
 
 ---
 
