@@ -6,7 +6,17 @@ Owner: the Deputy Head of Secondary (Academic), who is **not a programmer**. Exp
 - Live site: https://imas-canadian.netlify.app (admin at `/admin`, Student Portal at `/portal`)
 - Hosting: Netlify (deploys automatically from `main` on GitHub). Database and sign-in: Supabase (Singapore).
 - Hosting guide: `docs/HOSTING-AND-MAINTENANCE-GUIDE.md`
-- **Next piece of work: `docs/STAGE-2-PLAN.md`** (grades and the AI academic advisor with Claude Haiku). Read it before starting Stage 2.
+- **Next piece of work: the AI academic advisor (Claude Haiku), Phase B of `docs/STAGE-2-PLAN.md`.** Student records (Phase A) are built: read the plan before continuing.
+
+## Student records rules (agreed October 2026)
+
+- Staff see and edit every student's records; **View as student** (`/admin/students/:id/view`) shows the portal exactly as the student sees it.
+- Blocking (Edge Function `block`/`unblock`) bans sign-in and hides records; the reason is staff-only (`student_notes`).
+- Feedback gating is **per course**: a student sees a course's mark only after sending feedback on it (database policy on `course_marks`). The "Canadian Diploma Graduate" label needs feedback on every Grade 12 course. Switch: Site settings → `feedback_required`.
+- Feedback results are anonymous; breakdowns need at least 3 responses.
+- Subjects counted for graduation = NB courses in the cohort plan, excluding Grade 10 extensions; courses on one card count once (`src/lib/progress.ts`).
+- Promotion is suggested (repeat from `repeat_threshold` courses not passed, default 3), staff decide, every decision is logged in `promotions` and the latest can be undone.
+- The academic advisor is a real teacher (Teachers page), shown to students from Grade 12.
 
 ## Content rules from the school (final; they override older documents)
 
@@ -33,7 +43,7 @@ npm run build:artifact # single-file preview for a private Artifact
 ```
 
 - Without `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` the site runs on built-in content and the admin panel and portal work in demo mode (student `260001` / `A1234567`).
-- Database: `supabase/migrations/0001_content.sql`, `0002_students.sql`, `supabase/seed.sql`. Security tests: `supabase/tests/` (run on a local PostgreSQL 16, see its README).
+- Database: `supabase/migrations/0001_content.sql`, `0002_students.sql`, `0003_records.sql`, `supabase/seed.sql`. Security tests: `supabase/tests/` (run on a local PostgreSQL 16, see its README).
 - Student accounts are created and passwords set only by the Edge Function `supabase/functions/manage-students` (holds the service role key). Never put the service role or secret key in the website or Netlify.
 - Students sign in as `StudentID@imas.edu.my`; first password = ID number; the portal stays locked until they set their own.
 - Before pushing: type-check, unit tests, build, browser tests; update the hosting guide when setup steps change.

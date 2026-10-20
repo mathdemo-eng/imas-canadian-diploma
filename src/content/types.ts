@@ -122,6 +122,12 @@ export interface Settings {
   grade12_credit_hours: number;
   hero_title: string;
   hero_lede: string;
+  /** e.g. "2026-2027". Empty means work it out from today's date (a new year starts in September). */
+  current_academic_year: string;
+  /** The promotion page suggests repeating a grade when at least this many courses were not passed. */
+  repeat_threshold: number;
+  /** Students must give feedback on a course before they can see its mark. */
+  feedback_required: boolean;
 }
 
 export interface ContentBundle {

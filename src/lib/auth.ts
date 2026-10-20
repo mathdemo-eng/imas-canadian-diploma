@@ -3,6 +3,9 @@ import { demo } from './demo-backend';
 import { callStudentsFunction } from './server-function';
 import { getSupabase, supabaseConfigured, supabaseTarget } from './supabase';
 
+/** Shown when a blocked student tries to sign in. The reason is never shown to the student. */
+export const BLOCKED_MESSAGE = 'Your portal access is paused. Please contact the Canadian Diploma office at school.';
+
 /** Student accounts are <Student ID>@imas.edu.my. */
 export const SCHOOL_DOMAIN = 'imas.edu.my';
 
@@ -95,6 +98,7 @@ export async function signIn(identifier: string, password: string): Promise<stri
   if (!supabaseConfigured) {
     const account = demo.accounts.get(email);
     if (!account || account.password !== password) return 'That ID or password isn’t right. Check them and try again.';
+    if (demo.students.find((st) => st.id === account.id)?.blocked) return BLOCKED_MESSAGE;
     demo.signedIn = account;
     demo.notify();
     return null;
@@ -105,6 +109,7 @@ export async function signIn(identifier: string, password: string): Promise<stri
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (!error) return null;
     if (/invalid login credentials/i.test(error.message)) return 'That ID or password isn’t right. Check them and try again.';
+    if (/banned/i.test(error.message) || error.code === 'user_banned') return BLOCKED_MESSAGE;
     if (/email not confirmed/i.test(error.message)) return 'This account hasn’t been confirmed yet. In Supabase → Authentication → Users, confirm the user (or add it again with “Auto Confirm User” ticked).';
     if (/fetch|network/i.test(error.message)) return connectionProblem(error);
     if (/invalid api key|no api key|api key/i.test(error.message)) {

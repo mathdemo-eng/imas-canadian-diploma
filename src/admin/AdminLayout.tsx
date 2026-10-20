@@ -19,11 +19,21 @@ export function useAdmin() {
   return ctx;
 }
 
-const NAV = [
-  { to: '/admin', label: 'Dashboard', end: true },
-  { to: '/admin/settings', label: 'Site settings', end: false },
-  { to: '/admin/students', label: 'Students', end: false },
-  ...COLLECTION_ORDER.map((k) => ({ to: `/admin/${k}`, label: COLLECTIONS[k].title, end: false })),
+export const STUDENT_PAGES = [
+  { to: '/admin/students', label: 'Students', text: 'Every student: open one to see their records, block access or view their portal as they see it.' },
+  { to: '/admin/records', label: 'Subjects & grades', text: 'Upload subjects covered and marks from a sheet, for one student or a whole group.' },
+  { to: '/admin/promotion', label: 'Promotion', text: 'At the end of the year: promote, repeat or graduate students. Every decision can be undone.' },
+  { to: '/admin/teachers', label: 'Teachers', text: 'Profiles for academic advisors and course teachers.' },
+  { to: '/admin/feedback', label: 'Feedback', text: 'Anonymous results of the student feedback on each course and teacher.' },
+];
+
+const NAV: { group?: string; items: { to: string; label: string; end?: boolean }[] }[] = [
+  { items: [{ to: '/admin', label: 'Dashboard', end: true }] },
+  { group: 'Students', items: STUDENT_PAGES },
+  {
+    group: 'Website',
+    items: [{ to: '/admin/settings', label: 'Site settings' }, ...COLLECTION_ORDER.map((k) => ({ to: `/admin/${k}`, label: COLLECTIONS[k].title }))],
+  },
 ];
 
 export function AdminLayout() {
@@ -32,7 +42,7 @@ export function AdminLayout() {
   const qc = useQueryClient();
   const leave = async () => {
     await signOut();
-    qc.removeQueries({ queryKey: ['students'] });
+    for (const queryKey of [['students'], ['records-all'], ['student-file'], ['promotions'], ['teachers'], ['student-notes']]) qc.removeQueries({ queryKey });
   };
 
   return (
@@ -77,19 +87,28 @@ export function AdminLayout() {
             <>
               <nav aria-label="Admin" className="min-w-0 lg:sticky lg:top-20 lg:self-start">
                 <ul className="flex gap-1 overflow-x-auto pb-2 lg:grid lg:overflow-visible lg:pb-0">
-                  {NAV.map((n) => (
-                    <li key={n.to} className="shrink-0">
-                      <NavLink
-                        to={n.to}
-                        end={n.end}
-                        className={({ isActive }) =>
-                          `block rounded-lg px-3 py-2 text-[0.95rem] font-semibold ${isActive ? 'bg-blue text-on-blue' : 'text-ink-2 hover:bg-sheet hover:text-blue'}`
-                        }
-                      >
-                        {n.label}
-                      </NavLink>
-                    </li>
-                  ))}
+                  {NAV.flatMap((g) => [
+                    ...(g.group
+                      ? [
+                          <li key={g.group} aria-hidden className="hidden px-3 pb-1 pt-4 t-label text-ink-3 lg:block">
+                            {g.group}
+                          </li>,
+                        ]
+                      : []),
+                    ...g.items.map((n) => (
+                      <li key={n.to} className="shrink-0">
+                        <NavLink
+                          to={n.to}
+                          end={n.end}
+                          className={({ isActive }) =>
+                            `block rounded-lg px-3 py-2 text-[0.95rem] font-semibold ${isActive ? 'bg-blue text-on-blue' : 'text-ink-2 hover:bg-sheet hover:text-blue'}`
+                          }
+                        >
+                          {n.label}
+                        </NavLink>
+                      </li>
+                    )),
+                  ])}
                 </ul>
               </nav>
               <main className="min-w-0">

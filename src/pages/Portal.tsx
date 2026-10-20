@@ -1,14 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BarChart3, CalendarRange, Check, GraduationCap, KeyRound, LogOut, Sparkles, X } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Check, KeyRound, LogOut, X } from 'lucide-react';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { PasswordInput } from '../components/PasswordInput';
-import { ButtonLink } from '../components/ui';
-import { useSite } from '../content/useSite';
-import { changePassword, passwordProblems, signIn, signOut, useAuth } from '../lib/auth';
+import { BLOCKED_MESSAGE, changePassword, passwordProblems, signIn, signOut, useAuth } from '../lib/auth';
 import { DEMO_STUDENT } from '../lib/demo-backend';
 import { fetchMyStudent, type StudentRecord } from '../lib/students';
 import { isPreviewBuild, supabaseConfigured } from '../lib/supabase';
+
+// The portal itself loads only after a student signs in, so the public pages stay light.
+const StudentPortal = lazy(() => import('../portal/StudentPortal').then((m) => ({ default: m.StudentPortal })));
 
 /** The Student Portal: sign in, create your own password, then your profile. */
 export function Portal() {
@@ -45,15 +45,22 @@ export function Portal() {
         text="You are signed in, but there is no student record for this account. Staff should use the admin panel instead."
       />
     );
+  } else if (student.data.blocked) {
+    body = <Notice title="Your portal access is paused" text={BLOCKED_MESSAGE} />;
   } else if (student.data.must_change_password) {
     body = <CreatePassword student={student.data} first />;
   } else {
-    body = <PortalHome student={student.data} />;
+    body = (
+      <Suspense fallback={<p role="status" className="text-ink-3">Opening your portal…</p>}>
+        <StudentPortal student={student.data} viewer="student" footer={<AccountSection student={student.data} />} />
+      </Suspense>
+    );
   }
+  const wide = auth.status === 'signed-in' && student.data && !student.data.must_change_password && !student.data.blocked;
 
   return (
     <div className="gutter py-6 sm:py-10">
-      <div className="sheet mx-auto grid max-w-[880px] gap-8 px-5 py-10 sm:px-10 sm:py-12">
+      <div className={`sheet mx-auto grid ${wide ? 'max-w-[1120px]' : 'max-w-[880px]'} gap-8 px-5 py-10 sm:px-10 sm:py-12`}>
         <header className="grid gap-2 border-b border-rule pb-6">
           <p className="t-label text-blue">Student Portal</p>
           <h1 className="t-h1">{auth.status === 'signed-in' && student.data && !student.data.must_change_password ? `Welcome, ${firstName(student.data.full_name)}` : 'Your Student Portal'}</h1>
@@ -225,92 +232,41 @@ function CreatePassword({ student, first, onDone }: { student: StudentRecord; fi
   );
 }
 
-function PortalHome({ student }: { student: StudentRecord }) {
-  const { tracks } = useSite();
-  const track = tracks.find((t) => t.id === student.track_id);
+function AccountSection({ student }: { student: StudentRecord }) {
   const [changing, setChanging] = useState(false);
   const [saved, setSaved] = useState(false);
-
   return (
-    <div className="grid gap-8">
+    <section className="grid gap-4 border-t border-rule pt-6">
+      <p className="t-label text-ink-3">My account</p>
       {saved && (
         <p role="status" className="rounded-lg bg-green-tint px-4 py-3 font-semibold text-green-ink">
           Your new password is saved.
         </p>
       )}
-      <dl className="grid gap-px overflow-hidden rounded-2xl border border-rule bg-rule sm:grid-cols-2">
-        <div className="grid gap-1 bg-sheet p-5">
-          <dt className="t-label text-ink-3">Student ID</dt>
-          <dd className="font-mono text-lg">{student.student_id}</dd>
-        </div>
-        <div className="grid gap-1 bg-sheet p-5">
-          <dt className="t-label text-ink-3">Name</dt>
-          <dd className="font-semibold">{student.full_name}</dd>
-        </div>
-      </dl>
-
-      <section className="grid gap-3 rounded-2xl bg-sheet-2 p-6">
-        <p className="t-label text-ink-3">My cohort</p>
-        {track ? (
-          <>
-            <p className="font-display text-2xl font-semibold">{track.name}</p>
-            <p className="text-ink-2">
-              {track.duration_years}-year programme · {track.stated_total} diploma courses
-            </p>
-            <ButtonLink to={`/academic-plan?track=${track.id}`} className="w-fit">
-              Open my academic plan
-            </ButtonLink>
-          </>
-        ) : (
-          <p className="text-ink-2">Your coordinator hasn’t set your cohort yet. You can still browse every plan in the <Link to="/academic-plan" className="prose-link">Academic Plan</Link>.</p>
-        )}
-      </section>
-
-      <section className="grid gap-3">
-        <p className="t-label text-ink-3">Coming soon to your portal</p>
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {[
-            { icon: GraduationCap, t: 'Subjects covered', d: 'Courses completed, in progress and still to come' },
-            { icon: BarChart3, t: 'Grades', d: 'Your results, course by course and semester by semester' },
-            { icon: CalendarRange, t: 'Time to graduate', d: 'Credit-hours earned and your projected graduation date' },
-            { icon: Sparkles, t: 'Academic advisor', d: 'Personal guidance on how to improve, based on your results' },
-          ].map(({ icon: Icon, t, d }) => (
-            <li key={t} className="grid content-start gap-1 rounded-xl border border-rule p-4">
-              <Icon size={20} aria-hidden className="text-blue" />
-              <p className="font-semibold">{t}</p>
-              <p className="text-sm text-ink-2">{d}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="grid gap-4 border-t border-rule pt-6">
-        <p className="t-label text-ink-3">My account</p>
-        {changing ? (
-          <CreatePassword
-            student={student}
-            first={false}
-            onDone={() => {
-              setChanging(false);
-              setSaved(true);
+      {changing ? (
+        <CreatePassword
+          student={student}
+          first={false}
+          onDone={() => {
+            setChanging(false);
+            setSaved(true);
+          }}
+        />
+      ) : (
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setChanging(true);
+              setSaved(false);
             }}
-          />
-        ) : (
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setChanging(true);
-                setSaved(false);
-              }}
-              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-rule-strong px-5 font-semibold hover:border-blue hover:text-blue"
-            >
-              <KeyRound size={16} aria-hidden /> Change password
-            </button>
-            <SignOutButton />
-          </div>
-        )}
-      </section>
-    </div>
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-rule-strong px-5 font-semibold hover:border-blue hover:text-blue"
+          >
+            <KeyRound size={16} aria-hidden /> Change password
+          </button>
+          <SignOutButton />
+        </div>
+      )}
+    </section>
   );
 }

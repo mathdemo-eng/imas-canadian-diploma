@@ -8,9 +8,11 @@
 // (The Hosting & Maintenance Guide walks through it.)
 //
 // Actions (POST JSON):
-//   { action: 'import', rows: [{ student_id, full_name, password, track_id }] }   editors only
+//   { action: 'import', rows: [{ student_id, full_name, password, track_id, current_grade?, academic_year? }] }   editors only
 //   { action: 'reset',  student_id, password }                                     editors only
 //   { action: 'delete', student_id }                                               editors only
+//   { action: 'block',  student_id, reason }   stops sign-in and hides records      editors only
+//   { action: 'unblock', student_id }                                              editors only
 //   { action: 'set-password', password }       the signed-in student sets their own password
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -31,11 +33,14 @@ function reply(body: unknown, status = 200) {
 const fail = (error: string, status = 400) => reply({ error }, status);
 
 const ID_PATTERN = /^[A-Za-z0-9._-]+$/;
+const YEAR_PATTERN = /^[0-9]{4}-[0-9]{4}$/;
+/** Long enough to mean "until unblocked". */
+const BLOCK_DURATION = '876000h';
 const emailFor = (studentId: string) => `${studentId.trim().toLowerCase()}@${DOMAIN}`;
 /** For ilike: match the text exactly, ignoring case. */
 const exact = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 
-type Row = { student_id?: unknown; full_name?: unknown; password?: unknown; track_id?: unknown };
+type Row = { student_id?: unknown; full_name?: unknown; password?: unknown; track_id?: unknown; current_grade?: unknown; academic_year?: unknown };
 type Result = { student_id: string; status: 'created' | 'exists' | 'error'; message?: string };
 
 Deno.serve(async (req) => {
@@ -99,12 +104,16 @@ Deno.serve(async (req) => {
       const full_name = String(row.full_name ?? '').trim();
       const password = String(row.password ?? '').trim();
       const track_id = row.track_id ? String(row.track_id) : null;
+      const current_grade = row.current_grade ? Number(row.current_grade) : null;
+      const academic_year = row.academic_year ? String(row.academic_year).trim() : null;
       const bad = (message: string) => results.push({ student_id, status: 'error', message });
 
       if (!ID_PATTERN.test(student_id)) { bad('The Student ID can only use letters, numbers, dots, dashes and underscores.'); continue; }
       if (!full_name) { bad('The full name is missing.'); continue; }
       if (password.length < 6) { bad('The ID number must be at least 6 characters.'); continue; }
       if (track_id && !tracks.has(track_id)) { bad(`The track “${track_id}” doesn’t exist.`); continue; }
+      if (current_grade !== null && ![10, 11, 12].includes(current_grade)) { bad('The grade must be 10, 11 or 12.'); continue; }
+      if (academic_year !== null && !YEAR_PATTERN.test(academic_year)) { bad('The academic year must look like 2026-2027.'); continue; }
       const email = emailFor(student_id);
       if (staff.has(email)) { bad(`${email} is an editor’s email, so it can’t be a student account.`); continue; }
 
@@ -127,7 +136,10 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const { error: insertError } = await admin.from('students').insert({ id: created.user.id, student_id, full_name, track_id, must_change_password: true });
+      const record: Record<string, unknown> = { id: created.user.id, student_id, full_name, track_id, must_change_password: true };
+      if (current_grade !== null) record.current_grade = current_grade;
+      if (academic_year !== null) record.academic_year = academic_year;
+      const { error: insertError } = await admin.from('students').insert(record);
       if (insertError) {
         await admin.auth.admin.deleteUser(created.user.id);
         bad(insertError.code === '23505' ? 'This Student ID is already used.' : `The student record couldn’t be saved: ${insertError.message}`);
@@ -136,6 +148,20 @@ Deno.serve(async (req) => {
       results.push({ student_id, status: 'created' });
     }
     return reply({ results });
+  }
+
+  if (body.action === 'block' || body.action === 'unblock') {
+    const student_id = String(body.student_id ?? '').trim();
+    const { data: student } = await admin.from('students').select('id').eq('student_id', student_id).maybeSingle();
+    if (!student) return fail(`There is no student with the ID ${student_id}.`);
+    const blocking = body.action === 'block';
+    const { error } = await admin.auth.admin.updateUserById(student.id, { ban_duration: blocking ? BLOCK_DURATION : 'none' });
+    if (error) return fail(`The account couldn’t be ${blocking ? 'blocked' : 'unblocked'}: ${error.message}`);
+    const { error: flagError } = await admin.from('students').update({ blocked: blocking }).eq('id', student.id);
+    if (flagError) return fail(`Sign-in was ${blocking ? 'stopped' : 'restored'}, but the record wasn’t updated: ${flagError.message}`, 500);
+    const reason = blocking ? String(body.reason ?? '').trim().slice(0, 500) : '';
+    await admin.from('student_notes').upsert({ student_id: student.id, blocked_reason: reason });
+    return reply({ ok: true });
   }
 
   if (body.action === 'reset' || body.action === 'delete') {

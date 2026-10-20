@@ -5,7 +5,7 @@ import { PasswordInput } from '../components/PasswordInput';
 import { contentProblems } from '../content/derive';
 import { changeStaffPassword } from '../lib/auth';
 import { isPreviewBuild, supabaseConfigured } from '../lib/supabase';
-import { useAdmin } from './AdminLayout';
+import { STUDENT_PAGES, useAdmin } from './AdminLayout';
 import { COLLECTIONS, COLLECTION_ORDER } from './collections';
 import { downloadBackup } from './data';
 
@@ -54,21 +54,31 @@ export function AdminHome() {
         {content.loadError && <p className="text-sm text-maroon">Database error: {content.loadError}</p>}
       </section>
 
+      <section aria-labelledby="students-title" className="grid gap-3">
+        <h2 id="students-title" className="t-label text-ink-3">
+          Students
+        </h2>
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {STUDENT_PAGES.map((p) => (
+            <li key={p.to}>
+              <Link to={p.to} className="grid h-full gap-1 rounded-xl border border-rule bg-sheet p-5 hover:border-blue">
+                <span className="font-semibold">{p.label}</span>
+                <span className="text-sm text-ink-2">{p.text}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <section aria-labelledby="sections-title" className="grid gap-3">
         <h2 id="sections-title" className="t-label text-ink-3">
-          Content
+          Website content
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <li>
             <Link to="/admin/settings" className="grid h-full gap-1 rounded-xl border border-rule bg-sheet p-5 hover:border-blue">
               <span className="font-semibold">Site settings</span>
-              <span className="text-sm text-ink-2">Contact details, IELTS band, assessment weights and other key figures.</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/students" className="grid h-full gap-1 rounded-xl border border-rule bg-sheet p-5 hover:border-blue">
-              <span className="font-semibold">Students</span>
-              <span className="text-sm text-ink-2">Student Portal accounts: add students from a spreadsheet, reset passwords.</span>
+              <span className="text-sm text-ink-2">Contact details, IELTS band, assessment weights, the current academic year and student-record rules.</span>
             </Link>
           </li>
           {COLLECTION_ORDER.map((k) => (

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import type { Settings } from '../content/types';
+import { normaliseAcademicYear } from '../lib/academic-year';
 import { useAdmin } from './AdminLayout';
 import { useContentEditor } from './data';
 
 interface SettingField {
   key: keyof Settings;
   label: string;
-  type: 'text' | 'number' | 'textarea' | 'url' | 'email';
+  type: 'text' | 'number' | 'textarea' | 'url' | 'email' | 'boolean';
   help?: string;
 }
 
@@ -40,6 +41,29 @@ const GROUPS: { title: string; fields: SettingField[] }[] = [
       { key: 'grade12_credit_hours', label: 'Credit-hours required at Grade 12 level', type: 'number' },
     ],
   },
+  {
+    title: 'Student records',
+    fields: [
+      {
+        key: 'current_academic_year',
+        label: 'Current academic year',
+        type: 'text',
+        help: 'For example 2026-2027. Leave empty to change automatically each September.',
+      },
+      {
+        key: 'repeat_threshold',
+        label: 'Suggest repeating a grade when this many courses are not passed',
+        type: 'number',
+        help: 'Only a suggestion on the Promotion page. You always make the final decision.',
+      },
+      {
+        key: 'feedback_required',
+        label: 'Students give course feedback before they see the mark',
+        type: 'boolean',
+        help: 'Each course’s mark appears once the student has sent feedback on that course.',
+      },
+    ],
+  },
 ];
 
 export function SettingsPage() {
@@ -64,6 +88,12 @@ export function SettingsPage() {
         }
       }
     }
+    const year = String(next.current_academic_year ?? '').trim();
+    if (year && !normaliseAcademicYear(year)) {
+      setStatus({ tone: 'error', text: 'The academic year must look like 2026-2027, or be left empty.' });
+      return;
+    }
+    next.current_academic_year = year ? normaliseAcademicYear(year)! : '';
     if (next.ca_weight + next.exam_weight !== 100) {
       setStatus({ tone: 'error', text: 'The two assessment weights must add up to 100.' });
       return;
@@ -100,6 +130,31 @@ export function SettingsPage() {
               className: 'w-full rounded-lg border border-rule-strong bg-sheet px-3 py-2',
               'aria-describedby': f.help ? `${id}-help` : undefined,
             };
+            if (f.type === 'boolean') {
+              return (
+                <div key={f.key} className="grid gap-1">
+                  <label htmlFor={id} className="flex items-center gap-3 font-semibold">
+                    <input
+                      id={id}
+                      type="checkbox"
+                      checked={Boolean(draft[f.key])}
+                      onChange={(e) => {
+                        setDraft((d) => ({ ...d, [f.key]: e.target.checked }));
+                        setStatus(null);
+                      }}
+                      aria-describedby={f.help ? `${id}-help` : undefined}
+                      className="h-5 w-5 accent-blue"
+                    />
+                    {f.label}
+                  </label>
+                  {f.help && (
+                    <p id={`${id}-help`} className="pl-8 text-sm text-ink-3">
+                      {f.help}
+                    </p>
+                  )}
+                </div>
+              );
+            }
             return (
               <div key={f.key} className="grid gap-1.5">
                 <label htmlFor={id} className="font-semibold">

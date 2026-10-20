@@ -196,8 +196,14 @@ test('admin Students: import from a pasted list, then the student can sign in', 
   const errors = collectErrors(page);
   await page.goto('/admin/students');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Students');
+  await page.getByRole('button', { name: 'Add students' }).click();
   await page.getByLabel('Paste the rows here').fill(
-    ['Student ID\tFull name\tID number\tTrack', '260101\tAisha Rahman\t080512101234\tCAN Grade 11', '260102\tDaniel Lim\t12\t', '260001\tDemo Student\tA1234567\t'].join('\n'),
+    [
+      'Student ID\tFull name\tID number\tTrack\tGrade',
+      '260101\tAisha Rahman\t080512101234\tCAN Grade 11\t11',
+      '260102\tDaniel Lim\t12\t\t',
+      '260001\tDemo Student\tA1234567\t\t',
+    ].join('\n'),
   );
   await expect(page.getByText('2 students ready to add')).toBeVisible();
   await expect(page.getByText('the ID number must be at least 6 characters')).toBeVisible();
@@ -205,10 +211,12 @@ test('admin Students: import from a pasted list, then the student can sign in', 
   await page.getByRole('button', { name: 'Create 2 accounts' }).click();
   await expect(page.getByText('1 created · 1 already had an account')).toBeVisible();
 
-  const row = page.getByRole('button', { name: /260101/ });
+  const row = page.getByRole('listitem').filter({ has: page.getByRole('link', { name: 'Aisha Rahman' }) });
   await expect(row).toContainText('Waiting for first sign-in');
   await expect(row).toContainText('CAN · Grade 11 entry');
-  await row.click();
+  await expect(row).toContainText('Grade 11 · ');
+  await row.getByRole('link', { name: 'Aisha Rahman' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Aisha Rahman');
   await page.getByLabel('Forgotten password? Set a temporary one').fill('Temp-2026');
   await page.getByRole('button', { name: 'Reset password' }).click();
   await expect(page.getByText('Password reset.')).toBeVisible();
@@ -221,5 +229,189 @@ test('admin Students: import from a pasted list, then the student can sign in', 
   await page.getByLabel('Password', { exact: true }).fill('Temp-2026');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByText('Create your own password to continue')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+/** Changes page inside the app without reloading, so the demo's in-memory data is kept. */
+async function go(page: Page, path: string) {
+  await page.evaluate((p) => {
+    window.history.pushState({}, '', p);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }, path);
+}
+
+async function signInAsDemoStudent(page: Page) {
+  await page.goto('/portal');
+  await page.getByLabel('Student ID').fill('260001');
+  await page.getByLabel('Password', { exact: true }).fill('A1234567');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByLabel('New password').fill('Maple-leaf7');
+  await page.getByLabel('Type it again').fill('Maple-leaf7');
+  await page.getByRole('button', { name: 'Save my password' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Welcome, Demo');
+}
+
+test('Student Portal: a mark appears once the student sends feedback on the course', async ({ page }) => {
+  const errors = collectErrors(page);
+  await signInAsDemoStudent(page);
+  await expect(page.getByText('2 courses are waiting for your feedback.')).toBeVisible();
+  await expectAccessible(page);
+
+  await page.getByRole('tab', { name: 'My grades' }).click();
+  const precalc = page.getByRole('listitem').filter({ hasText: 'Pre-Calculus 110' }).filter({ hasText: '2025–26' });
+  await expect(precalc).not.toContainText('65%');
+  await expectAccessible(page);
+  await precalc.getByRole('button', { name: 'Give feedback to see your mark' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Pre-Calculus 110' })).toBeVisible();
+  await page.getByRole('button', { name: 'Send feedback' }).click();
+  await expect(page.getByRole('alert')).toContainText('14 left');
+  const groups = page.locator('fieldset[id^="q-"]');
+  for (let i = 0; i < (await groups.count()); i++) {
+    const options = groups.nth(i).locator('label');
+    await options.nth((await options.count()) === 5 ? 3 : 1).click();
+  }
+  await page.getByLabel(/What helped you learn most/).fill('Worked examples in class.');
+  await expect(page.getByText('14 of 14 answered')).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Send feedback' }).click();
+
+  await page.getByRole('tab', { name: 'My grades' }).click();
+  await expect(precalc).toContainText('65%');
+  await expect(page.getByRole('tab', { name: /Feedback/ })).toContainText('1');
+
+  for (const tab of ['My subjects', 'Time to graduate', 'Advisor']) {
+    await page.getByRole('tab', { name: tab }).click();
+    await expectAccessible(page);
+  }
+  await page.getByRole('button', { name: 'Book an appointment' }).click();
+  await expect(page.getByText('Choose a reason first')).toBeVisible();
+  await page.getByLabel('Other').check();
+  await page.getByLabel('Tell your advisor what it’s about').fill('University applications');
+  const gmail = page.getByRole('link', { name: 'Write the email in Gmail' });
+  await expect(gmail).toHaveAttribute('href', /mail\.google\.com.*sarah\.lim%40imas\.edu\.my/);
+  await expect(gmail).toHaveAttribute('href', /University\+applications/);
+  expect(errors).toEqual([]);
+});
+
+test('admin: block a student, who then can’t sign in, and unblock them', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/students/260002');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nur Iman Hassan');
+  await page.getByRole('button', { name: 'Block access' }).click();
+  await expect(page.getByRole('alert')).toContainText('Write the reason');
+  await page.getByLabel('Block access').fill('Fees unpaid for Semester 1');
+  await page.getByRole('button', { name: 'Block access' }).click();
+  await expect(page.getByText('Access is blocked', { exact: true })).toBeVisible();
+  await expect(page.getByText('Fees unpaid for Semester 1')).toBeVisible();
+  await expectAccessible(page);
+
+  await page.getByRole('link', { name: 'View site' }).click();
+  await page.getByRole('link', { name: 'Student sign-in' }).click();
+  await page.getByLabel('Student ID').fill('260002');
+  await page.getByLabel('Password', { exact: true }).fill('Demo-260002');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('alert')).toContainText('Your portal access is paused');
+  await expect(page.getByText('Fees unpaid')).toHaveCount(0);
+
+  await go(page, '/admin/students/260002');
+  await page.getByRole('button', { name: 'Unblock' }).click();
+  await expect(page.getByText('can sign in again')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('admin: View as student shows the student’s own portal, and nothing can be sent', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/students/260001');
+  await page.getByRole('link', { name: 'View as student' }).click();
+  await expect(page.getByText('Viewing as Demo Student.')).toBeVisible();
+  await expect(page.getByText('Welcome, Demo')).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('tab', { name: 'My grades' }).click();
+  await expect(page.getByRole('button', { name: 'Give feedback to see your mark' }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Give feedback to see your mark' }).first().click();
+  await expect(page.getByText('Staff preview: only the student can send this form.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send feedback' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Back to the student' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Demo Student');
+  expect(errors).toEqual([]);
+});
+
+test('admin: upload marks from a sheet, and they show on the student’s page', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/records');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Subjects & grades');
+  await page.getByRole('tab', { name: 'Grades sheet' }).click();
+  await page
+    .getByLabel('Paste the rows here')
+    .fill(['Student ID,Course,Final mark,Continuous assessment,Final exam', '260002,Biology 111/2,78,,', '260002,Chemistry 111/2,,72,65', '260002,Physics 111/2,,,', '260999,Physics 111/2,50,,'].join('\n'));
+  await expect(page.getByText('there is no student with the ID 260999')).toBeVisible();
+  await expect(page.getByText('1 row has no marks yet and will be skipped.')).toBeVisible();
+  await expect(page.getByText('2 rows ready · 0 new · 2 updates')).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Save 2 rows' }).click();
+  await expect(page.getByText('Saved for 1 student: 0 new records, 2 updated.')).toBeVisible();
+
+  await go(page, '/admin/students/260002');
+  const chem = page.getByRole('listitem').filter({ hasText: 'Chemistry 111/2' });
+  await expect(chem).toContainText('69.2%');
+  await expect(chem).toContainText('mark hidden from the student until they send feedback');
+  expect(errors).toEqual([]);
+});
+
+test('admin: promote a student with a retake, then undo it', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/promotion');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Promotion');
+  const toDecide = page.getByRole('list', { name: 'Students to decide for 2026-2027' });
+  const hana = toDecide.getByRole('listitem').filter({ has: page.getByRole('link', { name: 'Hana Yusof' }) });
+  await expect(hana).toContainText('Promote');
+  await expect(hana).toContainText('Pre-Calculus 110 (51%)');
+  await expect(hana).toContainText('Grade 12 in 2027-2028');
+  const adam = toDecide.getByRole('listitem').filter({ has: page.getByRole('link', { name: 'Adam Tan' }) });
+  await expect(adam).toContainText('Repeat the grade');
+  await expectAccessible(page);
+
+  await hana.getByRole('checkbox').check();
+  await page.getByLabel('Note for the history (optional)').fill('Academic board');
+  await page.getByRole('button', { name: 'Apply 1 decision' }).click();
+  await expect(page.getByText('1 promoted')).toBeVisible();
+  await page.getByRole('button', { name: 'Yes, apply' }).click();
+  await expect(page.getByText('1 decision applied.')).toBeVisible();
+  await expect(hana).toHaveCount(0);
+  await expect(page.getByRole('list', { name: 'Decided for 2026-2027' })).toContainText('Hana Yusof · Promoted');
+
+  await go(page, '/admin/students/260005');
+  await expect(page.getByText('Grade 12 · 2027–28')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Grade 12\s*2027-2028/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.getByRole('button', { name: 'Yes, undo' }).click();
+  await expect(page.getByText('Undone.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Grade 11 · 2026–27')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /2027-2028/ })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('admin: add a teacher who appears as a student’s advisor', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/teachers');
+  await page.getByRole('button', { name: 'Add a teacher' }).click();
+  await page.getByLabel('Full name').fill('Mr Arif Hakim');
+  await page.getByLabel('Email').fill('arif.hakim@imas.edu.my');
+  await page.getByLabel('Role').fill('Grade 12 Physics teacher');
+  await page.getByLabel('Qualifications').fill('MSc Physics, Universiti Malaya\nBEd Science');
+  await page.getByLabel('Joined IMAS in').fill('2018');
+  await page.getByRole('button', { name: 'Save teacher' }).click();
+  await expect(page.getByText('Mr Arif Hakim')).toBeVisible();
+  await expectAccessible(page);
+
+  await go(page, '/admin/students/260004');
+  await page.getByLabel('Academic advisor').selectOption({ label: 'Mr Arif Hakim' });
+  await page.getByRole('button', { name: 'Save profile' }).click();
+  await expect(page.getByText('Saved.')).toBeVisible();
+  await page.getByRole('link', { name: 'View as student' }).click();
+  await page.getByRole('tab', { name: 'Advisor' }).click();
+  await expect(page.getByRole('heading', { name: 'Mr Arif Hakim' })).toBeVisible();
+  await expect(page.getByText('MSc Physics, Universiti Malaya')).toBeVisible();
   expect(errors).toEqual([]);
 });

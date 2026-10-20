@@ -1,7 +1,7 @@
 # Stage 2 plan: grades and the AI academic advisor
 
-Agreed with the Deputy Head (Academic) on 20 October 2026. Not started yet.
-When work resumes, start with **"What we still need from the school"** below.
+Agreed with the Deputy Head (Academic) on 20 October 2026.
+**Phase A (student records) is built.** Next is Phase B. When work resumes, start with **"What we still need from the school"** below.
 
 ## The idea
 
@@ -30,7 +30,7 @@ Keep the whole pack under 100,000 tokens: Haiku's price rises above that. The es
 
 ## Build order
 
-- **Phase A: grades (no AI).** Tables for enrolments, course grades (assignments %, end-of-chapter tests %, project %, final exam %), attendance and IELTS results, all with row-level security (a student sees only their own). Admin import from a spreadsheet, like the student import. Portal shows marks, credits and the graduation checklist.
+- **Phase A: student records (no AI). Done, October 2026.** Tables `student_courses`, `course_marks` (final, continuous assessment, exam), `course_feedback`, `teachers`, `promotions`, `student_notes`, plus grade, year, enrolment, advisor, IELTS band and blocked on `students` (`0003_records.sql`, tested in `supabase/tests/records-test.sql`). Admin: student page, View as student, block, subjects and grades sheets (group or one student), Plan a year, Promotion with undo, Teachers, Feedback results. Portal tabs: Overview, My subjects, My grades, Time to graduate, Advisor (Grade 12), Feedback. Not yet stored: attendance and the separate assignment/test/project percentages; add them when the school's gradebook export arrives.
 - **Phase B: advisor, staff only.** Advisor handbook editor; briefing-pack builder; an admin test screen ("pick a student → Generate advice") so staff can judge quality before students see anything.
 - **Phase C: students.** Weekly advice notes generated overnight with the Message Batches API (half price), optionally approved by a teacher before release; then, if wanted, an "Ask the advisor" chat in the portal with a weekly question limit.
 
@@ -55,3 +55,4 @@ Keep the whole pack under 100,000 tokens: Haiku's price rises above that. The es
 - Google Search Console: the school sends the HTML verification tag; Claude adds it to `index.html`.
 - Optional: buy a domain (or ask IT for `canadian.imas.edu.my`), then update Supabase **Site URL**.
 - Supabase Pro (about US$25 a month) before grades are stored, for daily backups and no pausing.
+- Dual Commerce, Grade 10 entry (`cad-com-g10`): the plan lists 23 countable subjects, but the school's document states 22. Ask the school which is right, then fix the plan (Subjects in tracks) or the stated total (Cohort tracks).

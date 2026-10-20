@@ -20,6 +20,9 @@ export const settings: Settings = {
   hero_title: 'Your Canadian high school diploma, earned at IMAS.',
   hero_lede:
     'IMAS is the first school in Malaysia accredited by New Brunswick, Canada. Our students graduate with the same diploma as students in Canada, without leaving home.',
+  current_academic_year: '',
+  repeat_threshold: 3,
+  feedback_required: true,
 };
 
 export const announcements: Announcement[] = [

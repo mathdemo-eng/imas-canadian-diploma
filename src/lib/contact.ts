@@ -25,3 +25,9 @@ export const SCHOOL_SITES = (s: Pick<Settings, 'website_selangor' | 'website_kl'
   { label: 'IMAS Selangor', href: s.website_selangor },
   { label: 'IMAS Kuala Lumpur', href: s.website_kl },
 ];
+
+/** A new Gmail message with the address, subject and text filled in. */
+export function gmailComposeUrl(to: string, subject: string, body: string) {
+  const q = new URLSearchParams({ view: 'cm', fs: '1', to, su: subject, body });
+  return `https://mail.google.com/mail/?${q.toString()}`;
+}
