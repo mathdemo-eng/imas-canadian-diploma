@@ -5,7 +5,7 @@
 
 import type { ContentBundle, Course, Settings, Term, Track } from '../content/types';
 import { endYear, nextAcademicYear } from './academic-year';
-import type { CourseRowInput, Feedback, Mark, PromotionDecision, StudentCourse } from './records';
+import type { CourseRowInput, CourseStatus, Feedback, Mark, PromotionDecision, StudentCourse } from './records';
 import type { StudentPatch, StudentRecord } from './students';
 
 export type Viewer = 'student' | 'staff';
@@ -231,6 +231,56 @@ export function planYearRows(
     .filter((p) => p.track_id === student.track_id && p.grade === grade)
     .sort((a, b) => TERM_ORDER[a.term] - TERM_ORDER[b.term] || a.slot - b.slot)
     .map((p) => ({ student_id: student.id, course_id: p.course_id, academic_year: year, grade_level: grade, term: p.term, status, attempt: 1 }));
+}
+
+export interface GroupSubjectOptions {
+  year: string;
+  /** 'plan': the grade the course has in the student's cohort plan, or else the student's own grade. */
+  grade: 'plan' | 10 | 11 | 12;
+  /** 'plan': the semester the course has in the student's cohort plan, or else Full year. */
+  term: 'plan' | Term;
+  status: CourseStatus;
+  teacherId?: string | null;
+}
+
+/**
+ * Every chosen course for every chosen student (not row by row): 30 students and 8 courses make 240 records.
+ * A course taken before counts as another attempt. Students whose grade can't be worked out are returned in `skipped`.
+ */
+export function groupSubjectRows(
+  students: StudentRecord[],
+  courseIds: string[],
+  content: Content,
+  o: GroupSubjectOptions,
+  existing: StudentCourse[] = [],
+): { rows: CourseRowInput[]; skipped: StudentRecord[] } {
+  const rows: CourseRowInput[] = [];
+  const skipped: StudentRecord[] = [];
+  for (const s of students) {
+    const own: CourseRowInput[] = [];
+    for (const courseId of courseIds) {
+      const inPlan = content.placements.filter((p) => p.track_id === s.track_id && p.course_id === courseId);
+      const planned = inPlan.find((p) => p.grade === s.current_grade) ?? inPlan[0];
+      const grade = o.grade === 'plan' ? (planned?.grade ?? s.current_grade) : o.grade;
+      if (!grade) break;
+      const term = o.term === 'plan' ? (inPlan.find((p) => p.grade === grade)?.term ?? 'FY') : o.term;
+      const before = existing.filter((c) => c.student_id === s.id && c.course_id === courseId && c.academic_year !== o.year);
+      const row: CourseRowInput = {
+        student_id: s.id,
+        course_id: courseId,
+        academic_year: o.year,
+        grade_level: grade,
+        term,
+        status: o.status,
+        attempt: Math.max(0, ...before.map((c) => c.attempt)) + 1,
+      };
+      if (o.teacherId) row.teacher_id = o.teacherId;
+      own.push(row);
+    }
+    if (own.length === courseIds.length) rows.push(...own);
+    else skipped.push(s);
+  }
+  return { rows, skipped };
 }
 
 // ---------------------------------------------------------------------------

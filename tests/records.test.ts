@@ -6,6 +6,7 @@ import { missingAnswers } from '../src/lib/feedback-form';
 import {
   graduationProgress,
   groupByYear,
+  groupSubjectRows,
   outcomeOf,
   pendingFeedback,
   planSubjects,
@@ -165,6 +166,30 @@ describe('promotion suggestions', () => {
     expect(rows).toHaveLength(15);
     expect(rows.filter((r) => r.term === 'S2')).toHaveLength(7);
     expect(rows.every((r) => r.grade_level === 11 && r.academic_year === '2027-2028')).toBe(true);
+  });
+});
+
+describe('the same subjects for a group', () => {
+  const opts = { year: '2027-2028', grade: 'plan' as const, term: 'plan' as const, status: 'upcoming' as const };
+  it('gives every subject to every student, not row by row', () => {
+    const group = [student('260002'), student('260005')];
+    const { rows, skipped } = groupSubjectRows(group, ['biology-111', 'islamiyat', 'writing-110'], content, opts, staffView().courses);
+    expect(skipped).toEqual([]);
+    expect(rows).toHaveLength(6);
+    for (const s of group) expect(rows.filter((r) => r.student_id === s.id).map((r) => r.course_id).sort()).toEqual(['biology-111', 'islamiyat', 'writing-110']);
+    expect(rows.every((r) => r.academic_year === '2027-2028' && r.status === 'upcoming')).toBe(true);
+  });
+  it('counts a course taken before as another attempt', () => {
+    const hana = student('260005');
+    const { rows } = groupSubjectRows([hana], ['precalc-110'], content, opts, staffView().courses);
+    expect(rows[0].attempt).toBe(2);
+    expect(rows[0].term).toBe('S1');
+  });
+  it('leaves out a student whose grade can’t be worked out, unless a grade is chosen', () => {
+    const noGrade = { ...student('260002'), current_grade: null, track_id: null };
+    expect(groupSubjectRows([noGrade], ['biology-111'], content, opts).skipped).toHaveLength(1);
+    const chosen = groupSubjectRows([noGrade], ['biology-111'], content, { ...opts, grade: 11, term: 'S2', teacherId: 'demo-teacher-3' });
+    expect(chosen.rows).toEqual([expect.objectContaining({ grade_level: 11, term: 'S2', teacher_id: 'demo-teacher-3', attempt: 1 })]);
   });
 });
 

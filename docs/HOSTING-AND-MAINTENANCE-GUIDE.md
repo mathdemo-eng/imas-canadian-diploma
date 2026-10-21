@@ -175,7 +175,7 @@ Add every teacher of a Canadian Diploma course, not only the Grade 12 advisors: 
 3. Read the line under the boxes: *"… students in 2026-2027 · … course records to add"*. If it says some were left out, go back to step 5 for them.
 4. Click **Add subjects for … students**.
 
-Each student gets every course of their cohort's plan for their grade. It never adds a course twice, so it is safe to run again (for example after adding late joiners).
+Each student gets every course of their cohort's plan for their grade. It never adds a course twice, so it is safe to run again (for example after adding late joiners). If a group needs a different set of subjects from its cohort plan, use **Subjects & grades → Subjects for a group** instead (section 4).
 
 ### Step 7: Add who teaches each course (Excel or Google Sheets, about 30 minutes)
 1. Open **Subjects & grades → Subjects sheet**.
@@ -294,6 +294,12 @@ The admin menu's **Students** group holds everything about students. Each studen
 3. Fill it in Excel or Google Sheets. For grades, enter the **Final mark**, or the **Continuous assessment** and **Final exam** marks and the final mark is worked out (60% + 40%). Rows left without marks are skipped.
 4. Copy all the rows (with the heading row) and paste them under **2. Upload it**, or save as CSV and choose the file. Excel `.xlsx` files can't be read directly: copy and paste instead.
 5. Check the preview (problems are listed and left out) and click **Save … rows**. Uploading the same sheet again updates records; it never duplicates them. A mark makes the course **Completed**.
+
+**One row = one student and one course.** A sheet is read row by row, so subjects pasted beside a list of students would be paired up one to one. To give **the same subjects to a group of students**, use **Subjects & grades → Subjects for a group** instead:
+1. **Which students:** paste the Student ID column from your sheet (one per line), or choose a cohort and grade. Shortcut: tick students on the **Students** page and click **Add subjects to them**.
+2. **Which subjects:** tick them in the list (use **Find a course**), or choose a cohort plan and grade and click **Tick these**, then untick any you don't want.
+3. **Year and details:** the academic year, semester and course grade ("As in their plan" uses each student's cohort plan), **Add them as** (In progress, Upcoming or Completed), and a teacher if one teacher teaches all of them.
+4. Check the line *"… subjects × … students = … records"* and click **Add … subjects to … students**. Subjects a student already has for that year are left as they are, so running it twice does no harm.
 
 To fix one record, open the student and click **Edit** on the row (status, semester, teacher, marks, or remove it).
 

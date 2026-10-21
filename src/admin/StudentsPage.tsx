@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Download, FileUp, Search, TrendingUp, UserPlus, X } from 'lucide-react';
+import { ArrowRight, Download, FileUp, ListPlus, Search, TrendingUp, UserPlus, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { shortAcademicYear } from '../lib/academic-year';
@@ -359,6 +359,9 @@ function GroupActions({ chosen, onClear }: { chosen: StudentRecord[]; onClear: (
             </button>
           </>
         )}
+        <button type="button" onClick={() => navigate('/admin/records?tab=group', { state: { studentList: chosen.map((s) => s.student_id) } })} className={btn.secondary}>
+          <ListPlus size={16} aria-hidden /> Add subjects to them
+        </button>
         <button type="button" onClick={() => navigate('/admin/promotion', { state: { studentIds: chosen.map((s) => s.id) } })} className={btn.secondary}>
           <TrendingUp size={16} aria-hidden /> Promote them <ArrowRight size={14} aria-hidden />
         </button>

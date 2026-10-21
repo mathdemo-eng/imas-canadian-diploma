@@ -516,3 +516,45 @@ test('guide: getting the student system ready works as written (steps 5, 6, 7 an
   await expect(page.getByRole('link', { name: 'Test Student' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('admin: give the same subjects to a group of students in one go', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/records?tab=group');
+  await page.getByRole('textbox', { name: 'Student IDs' }).fill('260002\n260005, 999999');
+  await expect(page.getByText('2 students: Nur Iman Hassan, Hana Yusof')).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('No student has this ID: 999999');
+
+  await page.getByLabel('Tick the subjects of a cohort plan').selectOption({ label: 'CAN · Grade 10 entry' });
+  await page.getByLabel('For grade').selectOption({ label: 'Grade 10' });
+  await page.getByRole('button', { name: 'Tick these' }).click();
+  const ticked = Number((await page.getByText(/\d+ subjects ticked/).textContent())!.match(/\d+/)![0]);
+  expect(ticked).toBeGreaterThan(5);
+  // Untick one, found by searching.
+  await page.getByLabel('Find a course').fill('Islamiyat');
+  await page.getByRole('checkbox', { name: 'Islamiyat' }).uncheck();
+  await page.getByLabel('Find a course').fill('');
+  await expect(page.getByText(`${ticked - 1} subjects ticked`)).toBeVisible();
+
+  await page.getByLabel('Academic year').selectOption('2027-2028');
+  await expect(page.getByText(`${ticked - 1} subjects × 2 students = ${(ticked - 1) * 2} records`)).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: `Add ${ticked - 1} subjects to 2 students` }).click();
+  await expect(page.getByText(`Added ${(ticked - 1) * 2} records for 2 students.`)).toBeVisible();
+  // Running it again adds nothing new.
+  await page.getByRole('button', { name: `Add ${ticked - 1} subjects to 2 students` }).click();
+  await expect(page.getByText(`Added 0 records for 2 students. ${(ticked - 1) * 2} were already there`)).toBeVisible();
+
+  await go(page, '/admin/students/260002');
+  await expect(page.getByRole('heading', { name: /2027-2028/ })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('admin: tick students on the Students page, then add subjects to them', async ({ page }) => {
+  await page.goto('/admin/students');
+  await page.getByLabel('Select Adam Tan').check();
+  await page.getByLabel('Select Sara Lee').check();
+  await page.getByRole('button', { name: 'Add subjects to them' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Subjects & grades');
+  await expect(page.getByRole('textbox', { name: 'Student IDs' })).toHaveValue('260003\n260004');
+  await expect(page.getByText('2 students: Adam Tan, Sara Lee')).toBeVisible();
+});
