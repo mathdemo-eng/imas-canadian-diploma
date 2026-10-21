@@ -69,12 +69,6 @@ Do these in order. Steps marked **IT** need the school's IT team.
 
 **When the function's code changes** (for example, Stage 2 added blocking accounts): open **Edge Functions → manage-students → Code**, select all the old code and delete it, paste the new code from GitHub, and click **Deploy updates**.
 
-### Upgrading a site set up before Stage 2 (once, about 5 minutes)
-If your site was set up before the student records arrived (October 2026):
-1. In Supabase, **SQL Editor → New query**: paste all of `supabase/migrations/0003_records.sql` and click **Run**. It should end with **Success. No rows returned**.
-2. Update the `manage-students` function with the new code (see just above).
-3. In the admin panel open **Site settings → Student records**: enter the **Current academic year** (e.g. `2026-2027`) and save.
-
 ### Step 4: Netlify (puts the site online)
 1. Create an account at <https://www.netlify.com>.
    - If **Log in with GitHub** shows *Authentication Error … bad_verification_code*, choose **Log in with email** instead (use **Forgot password?** to set a password if you signed up through GitHub). Then connect GitHub from **User settings**. Trying again on mobile data rather than school Wi-Fi can also help.
@@ -113,8 +107,10 @@ If you buy a domain:
 1. Open <https://imas-canadian.netlify.app> and turn a few pages.
 2. Open `/admin` and sign in with the email and password from Step 2. You should see **Staff sign-in** (no pink "Demo mode" banner), and after signing in the dashboard should say **Connected to the database**.
 3. Change one FAQ, save it, then open the FAQ page to see the change.
-4. In **Students**, add one test student (section 3) and check it says **1 created**. Sign in as them at `/portal`, create a password, then remove the test student.
+4. In **Students**, add one test student (section 4) and check it says **1 created**. Sign in as them at `/portal`, create a password, then remove the test student.
 5. Open **Teachers** and add one teacher. If it says *Student records aren't set up in the database yet*, run `0003_records.sql` (Step 2).
+
+When the site is online, continue with **section 3** to load teachers, students and their subjects.
 
 ### Step 7: Get found on Google (10 minutes)
 A new website does not appear on Google until Google has visited it, which can take days or weeks. Until then Google may describe it as having no information or as inactive. Nothing is wrong with the site. To speed this up (if you plan to buy a domain, do that first):
@@ -126,7 +122,119 @@ A new website does not appear on Google until Google has visited it, which can t
 
 ---
 
-## 3. Everyday editing (no code)
+## 3. Get the student system ready (step by step, about two hours)
+
+Do these once, in this order, after the one-time setup. The site keeps working for visitors the whole time.
+
+**Have three lists to hand:** your teachers (name, email, role, qualifications, a photo if you have one); your students (Student ID, full name, IC or passport number, cohort, grade); and who teaches which course this year.
+
+### Step 1: Add the student records to the database (Supabase, 5 minutes)
+1. On GitHub, open `supabase/migrations/0003_records.sql` and click the **Copy** icon at the top right of the file.
+2. In Supabase open **SQL Editor → New query**, paste, and click **Run**.
+3. It should end with **Success. No rows returned**. Notices such as "… does not exist, skipping" are normal.
+
+Already done if you ran four SQL files in section 2; running it twice does no harm.
+
+### Step 2: Update the student accounts function (Supabase, 3 minutes)
+1. On GitHub, open `supabase/functions/manage-students/index.ts` and click **Copy**.
+2. In Supabase open **Edge Functions**, click **manage-students**, then the **Code** tab.
+3. Click in the code, select everything (**Ctrl+A**, or **Cmd+A** on a Mac), delete it, paste the new code, and click **Deploy updates**.
+
+The new code adds blocking and reads the Grade and Academic year columns when you add students.
+
+### Step 3: Check the student-record settings (admin, 2 minutes)
+1. Sign in at `/admin` and open **Site settings**.
+2. Check the assessment figures: continuous assessment **60**, final exam **40**, pass mark **60**, IELTS band **6**.
+3. Under **Student records**:
+   - **Current academic year:** leave it **empty**; it then changes by itself on 1 September. Type a year (e.g. `2026-2027`) only if you need to hold the old year for a while.
+   - **Suggest repeating a grade when this many courses are not passed:** **3**, or the school's rule.
+   - **Students give course feedback before they see the mark:** ticked.
+4. Click **Save settings**.
+
+### Step 4: Add the teachers (about 2 minutes each)
+1. Open **Teachers → Add a teacher**.
+2. Fill in **Full name** as students address them (e.g. *Ms Sarah Lim*), **Email**, **Role** (e.g. *Grade 12 Physics teacher*), **Subjects taught**, **Qualifications** (one per line), **Experience** (a sentence or two) and **Joined IMAS in** (the year).
+3. **Add a photo** if you have one (head and shoulders; it is made smaller automatically).
+4. Keep **Shown to students** ticked and click **Save teacher**. Repeat for each teacher.
+
+Add every teacher of a Canadian Diploma course, not only the Grade 12 advisors: the feedback results are grouped by teacher.
+
+### Step 5: Put every student in their grade (10 minutes)
+- **Students not added yet:** in **Students → Add students**, add a **Grade** column (10, 11 or 12) to your sheet. They get this academic year automatically.
+- **Students added before Stage 2** have no grade yet. Set them a cohort at a time:
+  1. Open **Students**. Set **Grade** to **Not set** and **Cohort** to one cohort, e.g. *CAN · Grade 10 entry*.
+  2. Tick **Tick all … shown**. A blue box opens above the list.
+  3. In **Change their** choose **Grade and academic year**, pick the **Grade** and the **Academic year** (this year), then click **Apply to … students**.
+  4. Click **Untick all**, choose the next cohort, and repeat.
+  5. If one cohort has students in different grades (e.g. some joined Grade 10 last year and are now in Grade 11), tick them in two rounds using the boxes by the names.
+  6. Finally set **Grade** to **Not set** and **Cohort** to **All cohorts**: the list should be empty. Then try **Cohort → Not set**: anyone listed needs a cohort (tick them and use **Change their → Cohort**).
+
+### Step 6: Give every student this year's subjects (5 minutes)
+1. Open **Subjects & grades → Plan a year**.
+2. **Academic year:** this year. **Cohort:** All cohorts. **Grade:** All grades. **Add them as:** In progress.
+3. Read the line under the boxes: *"… students in 2026-2027 · … course records to add"*. If it says some were left out, go back to step 5 for them.
+4. Click **Add subjects for … students**.
+
+Each student gets every course of their cohort's plan for their grade. It never adds a course twice, so it is safe to run again (for example after adding late joiners).
+
+### Step 7: Add who teaches each course (Excel or Google Sheets, about 30 minutes)
+1. Open **Subjects & grades → Subjects sheet**.
+2. Under **A sheet ready to fill in**, choose this year, one **Cohort** and one **Grade**, and click **Download for … students**.
+3. In the **Teacher** column, type the teacher's email (or their name exactly as on the Teachers page). Tip: sort by the **Course** column, type the email once and copy it down.
+4. Don't change the other columns; the **Status** column already says *In progress*.
+5. Select all the rows, including the heading row, and copy. Back on the page, paste into **Paste the rows here** (or save as CSV and use **Choose a CSV file**).
+6. Check the summary says *"… rows ready · 0 new · … updates"* and that no problems are listed, then click **Save … rows**.
+7. Repeat for each cohort and grade.
+
+### Step 8: Add earlier years' results (only if students already finished courses)
+Skip this if this is the programme's first year. If some students already completed Canadian Diploma courses (for example, Grade 11 students who did Grade 10 here last year):
+1. Open **Subjects & grades → Grades sheet**.
+2. Under **A sheet ready to fill in**, choose **last year** (e.g. 2025-2026), their cohort and their **current** grade, and download. The sheet lists the courses of the grade they were in last year.
+3. Fill in the **Final mark**, or the **Continuous assessment** and **Final exam** marks (the final mark is worked out). Leave a row empty if the student didn't take that course; empty rows are skipped.
+4. Copy all the rows with the heading row, paste them under **2. Upload it**, check the preview and click **Save … rows**.
+
+As with any course, students see these marks after sending feedback on each course. If you'd rather show earlier years' marks straight away, ask Claude.
+
+### Step 9: Assign the academic advisors (5 minutes)
+1. Open **Students**, set **Grade** to **Grade 12**, and tick the students who share an advisor.
+2. In **Change their** choose **Academic advisor**, pick the teacher and click **Apply to … students**.
+3. For one student: open them → **Profile → Academic advisor** → **Save profile**.
+
+Students see their advisor from Grade 12; Grade 10 and 11 students can be assigned now. When IELTS results arrive, enter each band in **Profile → IELTS band** (graduation needs band 6).
+
+### Step 10: Test everything with a test student (15 minutes)
+1. **Students → Add students**, paste these two lines and click **Create 1 account**:
+   ```
+   Student ID, Full name, ID number, Track, Grade
+   999001, Test Student, TEST-2026, CAN Grade 11, 12
+   ```
+2. Click **Test Student**. Under **Subjects and marks** click **Plan a year** → Grade 12, this year, In progress → **Add … courses**.
+3. Click **Edit** on one course: **Status** → **Completed**, **Final mark** → `75`, **Save**. The row says *mark hidden from the student until they send feedback*.
+4. In **Profile**, choose an **Academic advisor** and click **Save profile**.
+5. Click **View as student** and look through the tabs: **My grades** shows the mark locked; **Advisor** shows the teacher's profile.
+6. Open a **private (incognito) window** or use your phone (signing in as a student in the same window would sign you out of the admin panel). Go to `/portal`, sign in with `999001` and `TEST-2026`, and create a password.
+7. **My grades → Give feedback to see your mark**: answer the form and **Send feedback**; the 75% appears. On **Advisor**, try **Book an appointment**: Gmail opens a ready message (don't send it).
+8. In the admin window: Test Student → **Portal access** → type "Test" → **Block access**. In the private window, click **Sign out** (top right of the portal) and sign in again: it says access is paused. Click **Unblock**.
+9. Finally **Remove student → Yes, remove**. This deletes the test student and their records.
+
+### Step 11: Tell the students
+For example:
+
+> Your Canadian Diploma Student Portal is ready at imas-canadian.netlify.app/portal. Sign in with your Student ID; your first password is your IC or passport number, and you will then create your own. You'll see your subjects, your grades, how long until you graduate and, in Grade 12, your academic advisor. After each course you'll be asked for short feedback on the course and your teacher; your mark for that course appears as soon as you send it.
+
+### Through the year
+
+| When | What to do | Where |
+|---|---|---|
+| Start of the year (September) | Add new students (with a **Grade** column). Run **Plan a year** for anyone without this year's subjects. Add each course's teacher (step 7). Assign advisors to the new Grade 12. | Students · Subjects & grades |
+| End of Semester 1 (February) | Upload Semester 1 marks with the ready-filled **Grades sheet**. Remind students to send feedback; the **Feedback** page shows who hasn't. | Subjects & grades · Feedback |
+| End of the year (July) | Upload the final marks. Check **Feedback**. Enter IELTS bands. Then **Promotion**: review each grade, change any decision, and apply. Promoted students get next year's courses automatically. | Subjects & grades · Students · Promotion |
+| Each term | Download **Everything recorded so far** on the Subjects sheet and Grades sheet tabs, and keep the files in a staff Drive folder as a backup copy. | Subjects & grades |
+| Any time | Block or unblock access, reset a password, fix one record (**Edit** on the row), or **View as student**. | The student's page |
+
+---
+
+## 4. Everyday editing (no code)
 
 Sign in at **imas-canadian.netlify.app/admin** (or use **Staff sign-in** at the bottom of any page).
 
@@ -146,7 +254,7 @@ Sign in at **imas-canadian.netlify.app/admin** (or use **Staff sign-in** at the 
 | Change the enquiry email or the IMAS website links | **Site settings** | **Make an enquiry** opens a new Gmail message to the admissions email, with the subject you set. The IMAS Selangor and IMAS Kuala Lumpur links appear on the Contact page and in the footer. |
 | Add or change a question | **Questions & answers** | Choose who it is mainly for: new or current students. |
 | Change my own password | **Dashboard → Your password** | Type the new password twice and save. |
-| Set the academic year, pass mark rules for promotion, or switch the feedback rule | **Site settings → Student records** | See section 3, "Student records". |
+| Set the academic year, pass mark rules for promotion, or switch the feedback rule | **Site settings → Student records** | See section 4, "Student records". |
 
 **Hiding vs deleting.** To take something down temporarily, untick **Show on the website**. Deleting is permanent.
 
@@ -215,7 +323,7 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 
 ---
 
-## 4. Backups
+## 5. Backups
 
 - **Monthly:** in the admin dashboard click **Download backup** and save the file to a shared Drive folder (for example `Canadian Diploma / Website backups`). Also do this before big changes.
 - **Database backups:** Supabase's paid Pro plan keeps daily backups automatically. We recommend Pro before Stage 2, when grades are stored.
@@ -223,7 +331,7 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 
 ---
 
-## 5. Costs (check each provider's current pricing)
+## 6. Costs (check each provider's current pricing)
 
 | Service | Stage 1 | Stage 2 (student portal) |
 |---|---|---|
@@ -238,7 +346,7 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 
 ---
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 | What you see | What to do |
 |---|---|
@@ -252,15 +360,15 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 | Netlify: *Authentication Error … bad_verification_code* | Log in with email instead of GitHub, then connect GitHub from **User settings** (Step 4). |
 | I can't find **Deploys** in Netlify | Open **Projects**, click the project's name; **Deploys** is in the project's own menu on the left. |
 | **No editing access** after signing in | That email isn't in the `admins` table, or is spelt differently (spaces, capitals). Fix it under **Table Editor → admins**. |
-| Staff sign-in says the email or password isn't right | Check the user exists in **Authentication → Users** and is confirmed. If the password is forgotten, see "Forgotten staff password" (section 3). |
+| Staff sign-in says the email or password isn't right | Check the user exists in **Authentication → Users** and is confirmed. If the password is forgotten, see "Forgotten staff password" (section 4). |
 | A student's sign-in says the ID or password isn't right | Check their Student ID in **Students**. If needed, reset their password. |
 | Import: *Could not find the table 'public.students'* | The third SQL file hasn't been run. Run `supabase/migrations/0002_students.sql` (Step 2), then import again. |
-| *Student records aren't set up in the database yet* | Run `supabase/migrations/0003_records.sql` (see "Upgrading a site set up before Stage 2"). |
+| *Student records aren't set up in the database yet* | Run `supabase/migrations/0003_records.sql` (section 3, step 1). |
 | **Block access** or the import says *Unknown action* | The `manage-students` function has old code. Update it (Step 3, "When the function's code changes"). |
 | A student says they can't see a mark | They haven't sent feedback on that course yet. On their page the row says *mark hidden from the student until they send feedback*. **View as student** shows what they see. |
 | The **Advisor** tab says the advisor appears in Grade 12 | Set the student's **Current grade** to 12 and choose an **Academic advisor** in their profile. |
 | A student isn't listed on **Promotion** | Their grade or academic year isn't set, or they are in a different year. The page says how many and why. |
-| Import: *track "…" wasn't recognised* | The student is still added without a cohort. Click the student, choose the **Cohort** and **Save**. See "Writing the track" (section 3). |
+| Import: *track "…" wasn't recognised* | The student is still added without a cohort. Click the student, choose the **Cohort** and **Save**. See "Writing the track" (section 4). |
 | **Students** page says the student accounts function isn't set up | Do Step 3 (the function must be named exactly `manage-students`). |
 | **Students** page says your sign-in has expired, or **Invalid JWT** | Sign out of the admin panel and sign in again. If it keeps happening, open **Edge Functions → manage-students → Details** in Supabase and switch off **Verify JWT** (sometimes called **Enforce JWT verification**). The function checks who is signed in by itself. |
 | Import says an email "already has a sign-in account that isn't linked to a student" | Delete that user in **Authentication → Users**, then paste the student again. |
@@ -269,7 +377,7 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 
 ---
 
-## 7. Asking Claude for changes
+## 8. Asking Claude for changes
 
 Start a Claude Code session with the `imas-canadian-diploma` GitHub repository attached and describe what you want, for example:
 
@@ -283,7 +391,7 @@ For Claude to test the live site itself, allow `netlify.app`, `supabase.co` and 
 
 ---
 
-## 8. Stage 2 at a glance
+## 9. Stage 2 at a glance
 
 - **Done (October 2026):** student sign-in; staff access to any student's records and **View as student**; blocking accounts; subjects and grades from sheets (one student or a group); time to graduate; promotion with retakes, repeats, graduation and undo; teacher profiles and Grade 12 academic advisors with appointment booking; course feedback that unlocks marks and the graduate label.
 - **Next: AI academic advisor** (Claude Haiku). Personal suggestions for improving, based on the student's own results. It runs on the server so the API key is never exposed, and teachers can review its notes. See `docs/STAGE-2-PLAN.md`.

@@ -62,7 +62,11 @@ export function Portal() {
     <div className="gutter py-6 sm:py-10">
       <div className={`sheet mx-auto grid ${wide ? 'max-w-[1120px]' : 'max-w-[880px]'} gap-8 px-5 py-10 sm:px-10 sm:py-12`}>
         <header className="grid gap-2 border-b border-rule pb-6">
-          <p className="t-label text-blue">Student Portal</p>
+          <div className="flex flex-wrap items-center justify-between gap-x-4">
+            <p className="t-label text-blue">Student Portal</p>
+            {/* Always within reach, whichever tab the student is on. */}
+            {wide && <SignOutButton quiet />}
+          </div>
           <h1 className="t-h1">{auth.status === 'signed-in' && student.data && !student.data.must_change_password ? `Welcome, ${firstName(student.data.full_name)}` : 'Your Student Portal'}</h1>
         </header>
         {body}
@@ -98,7 +102,7 @@ function SignOutButton({ quiet = false }: { quiet?: boolean }) {
       }}
       className={
         quiet
-          ? 'inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-ink-3 hover:text-blue'
+          ? 'inline-flex min-h-11 w-fit items-center gap-1.5 text-sm font-semibold text-ink-2 hover:text-blue'
           : 'inline-flex min-h-11 w-fit items-center gap-2 rounded-full border border-rule-strong px-5 font-semibold hover:border-blue hover:text-blue'
       }
     >
@@ -264,7 +268,6 @@ function AccountSection({ student }: { student: StudentRecord }) {
           >
             <KeyRound size={16} aria-hidden /> Change password
           </button>
-          <SignOutButton />
         </div>
       )}
     </section>
