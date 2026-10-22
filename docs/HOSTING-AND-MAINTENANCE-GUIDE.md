@@ -104,6 +104,8 @@ You don't have to buy anything: `imas-canadian.netlify.app` works now and is fre
    |---|---|---|---|
    | CNAME | `canadian` | `imas-canadian.netlify.app` | 3600 (or their default) |
 
+   If Netlify said *"Domain imas.edu.my is already registered and not owned by your Netlify account"*, another Netlify account already uses the school's domain (for example the main website). Netlify then shows a **TXT** record (Host usually `netlify-challenge`, Value a long code): copy both exactly and ask IT to add it **together with** the CNAME. It only proves IMAS owns the domain and doesn't affect the main website or email. When IT confirms, open the domain in **Domain management** and click **Verify** (or add the domain again).
+
    Some DNS systems want the full name `canadian.imas.edu.my` in the Name box; it is the same record. There must be no other record (A, AAAA or another CNAME) named `canadian`. If the school's DNS is on Cloudflare, the record must be **DNS only** (grey cloud), not proxied. If the domain has **CAA** records, one must allow `letsencrypt.org`, which issues the free padlock certificate.
 3. When IT confirms (it usually works within an hour; allow up to a day), open **Domain management → HTTPS → Verify DNS configuration**. Netlify then issues the certificate by itself (if it doesn't, click **Provision certificate**).
 4. Next to `canadian.imas.edu.my` click **Options → Set as primary domain**. The old address keeps working and forwards to the new one.
@@ -393,6 +395,7 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 | **Students** page says the student accounts function isn't set up | Do Step 3 (the function must be named exactly `manage-students`). |
 | **Students** page says your sign-in has expired, or **Invalid JWT** | Sign out of the admin panel and sign in again. If it keeps happening, open **Edge Functions → manage-students → Details** in Supabase and switch off **Verify JWT** (sometimes called **Enforce JWT verification**). The function checks who is signed in by itself. |
 | Import says an email "already has a sign-in account that isn't linked to a student" | Delete that user in **Authentication → Users**, then paste the student again. |
+| Netlify: *"Domain imas.edu.my is already registered and not owned by your Netlify account"* | Another Netlify account uses the school's domain. Copy the TXT record Netlify shows (Host and Value) and ask IT to add it with the CNAME (Step 5). Then click **Verify**. |
 | Google shows no information, or calls the site inactive | The site is new and Google hasn't visited it yet. Do Step 7. |
 | Site is down after a code change | In Netlify → Deploys, publish the previous deploy, then tell Claude what happened. |
 
