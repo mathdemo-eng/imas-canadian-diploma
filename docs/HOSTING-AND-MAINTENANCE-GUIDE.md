@@ -96,6 +96,21 @@ You don't have to buy anything: `imas-canadian.netlify.app` works now and is fre
 | Your own domain from Cloudflare | About US$10–10.50 for a `.com` | You | Cheapest; same price each year; a few extra setup steps (ask Claude to guide you). |
 | A `.my` domain (e.g. `imascanadian.my`) | About RM100–150 | You | Needs a Malaysian ID or the school's company documents. |
 
+**Setting up `canadian.imas.edu.my` with IT**
+1. In Netlify, open the project → **Domain management → Add a domain → Add a domain you already own**, type `canadian.imas.edu.my`, click **Verify**, then **Add domain**. It shows *Pending DNS verification* until IT has done step 2.
+2. Send IT this record to add in the `imas.edu.my` DNS:
+
+   | Type | Name (host) | Value (points to) | TTL |
+   |---|---|---|---|
+   | CNAME | `canadian` | `imas-canadian.netlify.app` | 3600 (or their default) |
+
+   Some DNS systems want the full name `canadian.imas.edu.my` in the Name box; it is the same record. There must be no other record (A, AAAA or another CNAME) named `canadian`. If the school's DNS is on Cloudflare, the record must be **DNS only** (grey cloud), not proxied. If the domain has **CAA** records, one must allow `letsencrypt.org`, which issues the free padlock certificate.
+3. When IT confirms (it usually works within an hour; allow up to a day), open **Domain management → HTTPS → Verify DNS configuration**. Netlify then issues the certificate by itself (if it doesn't, click **Provision certificate**).
+4. Next to `canadian.imas.edu.my` click **Options → Set as primary domain**. The old address keeps working and forwards to the new one.
+5. **Deploys → Trigger deploy → Deploy project**, so the page list for Google uses the new address.
+6. In Supabase: **Authentication → URL Configuration → Site URL** → `https://canadian.imas.edu.my` → **Save**.
+7. In Google Search Console, add `https://canadian.imas.edu.my` as a new property and submit `sitemap.xml` again (Step 7).
+
 If you buy a domain:
 - Register it to a **school email**, not a personal one, and keep **auto-renew** on. If the domain lapses, the site goes offline and someone else can buy the name.
 - In Netlify click **Set as primary domain**. The `.netlify.app` address keeps working and forwards to the new one. The site's page list for Google (the sitemap) updates itself.
