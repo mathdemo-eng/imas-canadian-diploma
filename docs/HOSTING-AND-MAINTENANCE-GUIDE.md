@@ -139,6 +139,8 @@ A new website does not appear on Google until Google has visited it, which can t
 4. Paste the home page address into the search bar at the top and click **Request indexing**.
 5. Ask whoever edits imas.edu.my and kl.imas.edu.my to link to the site, for example a "Canadian Diploma" item in their menus. Links from the school's main sites help Google most.
 
+**What people type into Google.** Each page has its own title and description, written around phrases families really search for, such as *Canadian high school diploma Malaysia*, *Canadian diploma Malaysia*, *New Brunswick diploma*, *IGCSE and Canadian diploma* and *IMAS Canadian Diploma*. Single words such as "Canadian" or "diploma" on their own are searched worldwide, and no school site can promise to appear for them; be wary of anyone who offers that. What helps most: links from imas.edu.my, kl.imas.edu.my and the school's social media, and keeping the site's content accurate and up to date. To change a page's search title or description, ask Claude (they are in `src/seo.ts`).
+
 ---
 
 ## 3. Get the student system ready (step by step, about two hours)

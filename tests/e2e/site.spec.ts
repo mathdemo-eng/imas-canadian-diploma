@@ -558,3 +558,25 @@ test('admin: tick students on the Students page, then add subjects to them', asy
   await expect(page.getByRole('textbox', { name: 'Student IDs' })).toHaveValue('260003\n260004');
   await expect(page.getByText('2 students: Adam Tan, Sara Lee')).toBeVisible();
 });
+
+test('search engines: every chapter has its own title and description, before and after the app loads', async ({ page, request }) => {
+  const raw = await (await request.get('/pathways')).text();
+  expect(raw).toContain('<title>CAN and Dual Program (IGCSE + Canadian Diploma) | IMAS</title>');
+  expect(raw).toContain('<link rel="canonical" href="https://canadian.imas.edu.my/pathways" />');
+  expect(raw).toContain('"@type":"EducationalOrganization"');
+  expect(raw).toMatch(/<div id="root">.*Two routes to the Canadian high school diploma/);
+
+  await page.goto('/');
+  await expect(page).toHaveTitle('Canadian High School Diploma in Malaysia | IMAS International School');
+  await page.goto('/diploma');
+  await expect(page).toHaveTitle('The New Brunswick Canadian Diploma | IMAS Malaysia');
+  // Turning the page inside the app updates the title, description and address too.
+  await page.getByRole('navigation', { name: 'Turn the page' }).getByRole('link', { name: /Next/ }).click();
+  await expect(page).toHaveTitle('CAN and Dual Program (IGCSE + Canadian Diploma) | IMAS');
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Two routes/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/pathways$/);
+  await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+
+  await page.goto('/portal');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+});

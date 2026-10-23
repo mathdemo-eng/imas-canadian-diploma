@@ -1,8 +1,12 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { CHAPTERS } from './src/chapters';
+import { seedBundle } from './src/content/seed';
+import { PAGE_SEO, SITE_NAME } from './src/seo';
 
 /**
  * The site's public address. Netlify sets URL during builds to the main address
@@ -10,11 +14,82 @@ import { CHAPTERS } from './src/chapters';
  */
 const SITE_URL = (process.env.URL || process.env.SITE_URL || 'https://canadian.imas.edu.my').replace(/\/+$/, '');
 
-/** robots.txt and sitemap.xml, so search engines can find every chapter. */
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/** Who runs the site, in the format search engines read (schema.org). */
+function structuredData() {
+  const s = seedBundle.settings;
+  const data = [
+    { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: `${SITE_URL}/` },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'EducationalOrganization',
+      name: 'IMAS International School: Canadian Diploma',
+      alternateName: SITE_NAME,
+      url: `${SITE_URL}/`,
+      logo: `${SITE_URL}/brand/imas-logo-600.png`,
+      description: PAGE_SEO['/'].description,
+      email: s.admissions_email,
+      telephone: s.admissions_phone.replace(/\s+/g, ''),
+      address: { '@type': 'PostalAddress', addressCountry: 'MY' },
+      sameAs: [s.website_selangor, s.website_kl],
+    },
+  ];
+  return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+}
+
+/**
+ * One HTML file per chapter (e.g. pathways.html, served at /pathways) with its own title,
+ * description and address, and a short text outline inside the page. Search engines and link
+ * previews see these straight away; the app then loads and replaces the outline as usual.
+ */
+function pageFiles(html: string) {
+  const links = CHAPTERS.map((c) => `<li><a href="${c.path}">${esc(c.title)}</a>: ${esc(c.blurb)}</li>`).join('');
+  return CHAPTERS.map((c) => {
+    const seo = PAGE_SEO[c.path];
+    const url = `${SITE_URL}${c.path === '/' ? '/' : c.path}`;
+    const head = [
+      `<title>${esc(seo.title)}</title>`,
+      `<meta name="description" content="${esc(seo.description)}" />`,
+      `<link rel="canonical" href="${url}" />`,
+      `<meta property="og:type" content="website" />`,
+      `<meta property="og:site_name" content="${SITE_NAME}" />`,
+      `<meta property="og:url" content="${url}" />`,
+      `<meta property="og:title" content="${esc(seo.title)}" />`,
+      `<meta property="og:description" content="${esc(seo.description)}" />`,
+      structuredData(),
+    ].join('\n    ');
+    const outline =
+      `<div style="max-width:880px;margin:0 auto;padding:48px 20px">` +
+      `<p>IMAS International School · Canadian Diploma</p>` +
+      `<h1>${esc(c.path === '/' ? 'Your Canadian high school diploma, earned at IMAS' : c.title)}</h1>` +
+      `<p>${esc(seo.description)}</p>` +
+      `<nav aria-label="Chapters"><ul>${links}</ul></nav></div>`;
+    const page = html
+      .replace(/<title>[\s\S]*?<\/title>/, '')
+      .replace(/<meta\s+name="description"[\s\S]*?\/>/, '')
+      .replace(/<meta\s+property="og:title"[\s\S]*?\/>/, '')
+      .replace(/<meta\s+property="og:description"[\s\S]*?\/>/, '')
+      .replace('</head>', `    ${head}\n  </head>`)
+      .replace('<div id="root"></div>', `<div id="root">${outline}</div>`);
+    return { file: c.path === '/' ? 'index.html' : `${c.path.slice(1)}.html`, page };
+  });
+}
+
+/** robots.txt and sitemap.xml, so search engines can find every chapter, and a page file per chapter. */
 function searchEngineFiles(): Plugin {
+  let outDir = 'dist';
   return {
     name: 'search-engine-files',
     apply: 'build',
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    // Runs after index.html is written, so every page file starts from the finished page.
+    closeBundle() {
+      const html = readFileSync(resolve(outDir, 'index.html'), 'utf8');
+      for (const { file, page } of pageFiles(html)) writeFileSync(resolve(outDir, file), page);
+    },
     generateBundle() {
       const today = new Date().toISOString().slice(0, 10);
       const urls = CHAPTERS.map(

@@ -26,7 +26,8 @@ export const CHAPTERS: ChapterInfo[] = [
 ];
 
 export function chapterIndex(pathname: string) {
-  return CHAPTERS.findIndex((c) => c.path === pathname);
+  const path = pathname.replace(/\/+$/, '') || '/';
+  return CHAPTERS.findIndex((c) => c.path === path);
 }
 
 export function chapterLabel(c: ChapterInfo) {
