@@ -8,7 +8,7 @@ import { CHAPTERS } from './src/chapters';
  * The site's public address. Netlify sets URL during builds to the main address
  * (the custom domain once one is added), so these files follow a change of domain.
  */
-const SITE_URL = (process.env.URL || process.env.SITE_URL || 'https://imas-canadian.netlify.app').replace(/\/+$/, '');
+const SITE_URL = (process.env.URL || process.env.SITE_URL || 'https://canadian.imas.edu.my').replace(/\/+$/, '');
 
 /** robots.txt and sitemap.xml, so search engines can find every chapter. */
 function searchEngineFiles(): Plugin {

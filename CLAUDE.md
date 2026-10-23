@@ -3,7 +3,7 @@
 The guide to the New Brunswick (Canada) High School Diploma at IMAS International School, Malaysia, plus the Student Portal.
 Owner: the Deputy Head of Secondary (Academic), who is **not a programmer**. Explain things in plain language, step by step, and name the exact buttons and screens.
 
-- Live site: https://imas-canadian.netlify.app (admin at `/admin`, Student Portal at `/portal`)
+- Live site: https://canadian.imas.edu.my (admin at `/admin`, Student Portal at `/portal`); `imas-canadian.netlify.app` forwards to it. DNS: IT manages imas.edu.my (CNAME `canadian` → `imas-canadian.netlify.app`, plus a `netlify-challenge` TXT).
 - Hosting: Netlify (deploys automatically from `main` on GitHub). Database and sign-in: Supabase (Singapore).
 - Hosting guide: `docs/HOSTING-AND-MAINTENANCE-GUIDE.md`
 - **Next piece of work: the AI academic advisor (Claude Haiku), Phase B of `docs/STAGE-2-PLAN.md`.** Student records (Phase A) are built: read the plan before continuing.

@@ -53,6 +53,6 @@ Keep the whole pack under 100,000 tokens: Haiku's price rises above that. The es
 - Request Supabase's data processing agreement (dashboard → legal documents).
 - Two-step verification on the Supabase, Netlify and GitHub accounts.
 - Google Search Console: the school sends the HTML verification tag; Claude adds it to `index.html`.
-- Optional: buy a domain (or ask IT for `canadian.imas.edu.my`), then update Supabase **Site URL**.
+- Done: the site is live at `canadian.imas.edu.my`. Check that Supabase **Site URL** is set to `https://canadian.imas.edu.my`.
 - Supabase Pro (about US$25 a month) before grades are stored, for daily backups and no pausing.
 - Dual Commerce, Grade 10 entry (`cad-com-g10`): the plan lists 23 countable subjects, but the school's document states 22. Ask the school which is right, then fix the plan (Subjects in tracks) or the stated total (Cohort tracks).

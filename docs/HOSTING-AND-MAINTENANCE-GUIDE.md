@@ -5,9 +5,9 @@ No programming is needed for day-to-day work.
 
 | | Address |
 |---|---|
-| Website | <https://imas-canadian.netlify.app> |
-| Admin panel (staff) | <https://imas-canadian.netlify.app/admin> |
-| Student Portal | <https://imas-canadian.netlify.app/portal> |
+| Website | <https://canadian.imas.edu.my> (the old `imas-canadian.netlify.app` forwards here) |
+| Admin panel (staff) | <https://canadian.imas.edu.my/admin> |
+| Student Portal | <https://canadian.imas.edu.my/portal> |
 | Code | <https://github.com/mathdemo-eng/imas-canadian-diploma> |
 
 ---
@@ -86,7 +86,9 @@ Do these in order. Steps marked **IT** need the school's IT team.
 6. **Give it a readable name.** Open **Project configuration → General → Project details → Change project name**. The site is named `imas-canadian`, so its address is `imas-canadian.netlify.app`. Renaming changes the address, so do it before you share the link.
 
 ### Step 5: The website address
-You don't have to buy anything: `imas-canadian.netlify.app` works now and is free. If you want a different address, choose one:
+**Done (October 2026):** the site's main address is `canadian.imas.edu.my`, and `imas-canadian.netlify.app` forwards to it. The steps below are kept for reference.
+
+You don't have to buy anything: `imas-canadian.netlify.app` works and is free. If you want a different address, choose one:
 
 | Option | Cost per year | Who | Notes |
 |---|---|---|---|
@@ -121,7 +123,7 @@ If you buy a domain:
 **You don't need Supabase's "Custom Domain" add-on** (about US$10 a month). It only renames the database's behind-the-scenes address (`…supabase.co`), which visitors never see.
 
 ### Step 6: Check it works
-1. Open <https://imas-canadian.netlify.app> and turn a few pages.
+1. Open <https://canadian.imas.edu.my> and turn a few pages.
 2. Open `/admin` and sign in with the email and password from Step 2. You should see **Staff sign-in** (no pink "Demo mode" banner), and after signing in the dashboard should say **Connected to the database**.
 3. Change one FAQ, save it, then open the FAQ page to see the change.
 4. In **Students**, add one test student (section 4) and check it says **1 created**. Sign in as them at `/portal`, create a password, then remove the test student.
@@ -237,7 +239,7 @@ Students see their advisor from Grade 12; Grade 10 and 11 students can be assign
 ### Step 11: Tell the students
 For example:
 
-> Your Canadian Diploma Student Portal is ready at imas-canadian.netlify.app/portal. Sign in with your Student ID; your first password is your IC or passport number, and you will then create your own. You'll see your subjects, your grades, how long until you graduate and, in Grade 12, your academic advisor. After each course you'll be asked for short feedback on the course and your teacher; your mark for that course appears as soon as you send it.
+> Your Canadian Diploma Student Portal is ready at canadian.imas.edu.my/portal. Sign in with your Student ID; your first password is your IC or passport number, and you will then create your own. You'll see your subjects, your grades, how long until you graduate and, in Grade 12, your academic advisor. After each course you'll be asked for short feedback on the course and your teacher; your mark for that course appears as soon as you send it.
 
 ### Through the year
 
@@ -253,7 +255,7 @@ For example:
 
 ## 4. Everyday editing (no code)
 
-Sign in at **imas-canadian.netlify.app/admin** (or use **Staff sign-in** at the bottom of any page).
+Sign in at **canadian.imas.edu.my/admin** (or use **Staff sign-in** at the bottom of any page).
 
 | I want to… | Go to | Then |
 |---|---|---|
@@ -362,7 +364,7 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 | Netlify | Free plan is usually enough | Free or paid, depending on traffic |
 | Supabase | Free plan works. Free projects are paused after a period of inactivity. | **Pro recommended now that marks are stored**: daily backups, no pausing, more capacity |
 | Sign-in for staff and 300 students | Included in Supabase, well within the free plan's limits | Included |
-| Website address | Free: `imas-canadian.netlify.app`, or `canadian.imas.edu.my` with IT | Free |
+| Website address | Free: `canadian.imas.edu.my` (set up with IT) | Free |
 | Your own domain (optional) | About US$10–20 a year for a `.com`, or RM100–150 for a `.my` | Same |
 | Supabase "Custom Domain" add-on | **Not needed** | Not needed |
 | AI academic advisor | — | Pay-as-you-go Claude API usage |
