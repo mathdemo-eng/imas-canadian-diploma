@@ -15,6 +15,7 @@ export function RevealImage({
   position = 'center',
   caption,
   className = '',
+  edge = false,
   children,
 }: {
   src: string;
@@ -23,6 +24,8 @@ export function RevealImage({
   position?: string;
   caption?: ReactNode;
   className?: string;
+  /** A hairline edge, for photos whose corners are nearly white and would fade into the page. */
+  edge?: boolean;
   children?: ReactNode;
 }) {
   const reduced = useReducedMotion();
@@ -48,6 +51,7 @@ export function RevealImage({
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 1.6, ease: EASE }}
         />
+        {edge && <span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-ink/15" />}
         {children}
       </motion.div>
       {caption && <figcaption className="text-sm text-ink-3">{caption}</figcaption>}

@@ -8,14 +8,6 @@ Owner: the Deputy Head of Secondary (Academic), who is **not a programmer**. Exp
 - Hosting guide: `docs/HOSTING-AND-MAINTENANCE-GUIDE.md`
 - **Next piece of work: the AI academic advisor (Claude Haiku), Phase B of `docs/STAGE-2-PLAN.md`.** Student records (Phase A) are built: read the plan before continuing.
 
-## Pending: three photos from Google Drive (requested 23 October 2026)
-
-Google Drive hosts are blocked by the network policy, so fetch them with the Google Drive connector (`download_file_content`).
-Convert to WebP in `src/assets/photos/` (see the existing ones) and present them with the animated photo components in `src/components/media.tsx` (`RevealImage`, `ParallaxBanner` + `PhotoCaption`, `FloatingPoster`), like the Assessment page.
-- Academic Plan page: Drive files `17LjHFzzpsTmKj5NpC0WSBWZhAl1hEc0S` and `1b_D0tpS5sL7Vcc_USka4Z0OqCtlKPW6x`.
-- Student Hub page: Drive file `1RZvr4voszH1-Z3I3T-V4WZnmCrirF6Bs`.
-Look at each photo first, write accurate alt text, and remove this section when done.
-
 ## Student records rules (agreed October 2026)
 
 - Staff see and edit every student's records; **View as student** (`/admin/students/:id/view`) shows the portal exactly as the student sees it.
