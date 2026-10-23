@@ -47,37 +47,6 @@ export function Assessment() {
       </ParallaxBanner>
 
       <Section
-        eyebrow="Assessment for and of learning"
-        title="Two kinds of assessment"
-        intro={<p>New Brunswick separates assessment that helps you improve from assessment that measures what you have achieved.</p>}
-      >
-        <div className="grid gap-5 md:grid-cols-2">
-          <div className="grid content-start gap-3 rounded-2xl bg-blue-tint p-6">
-            <p className="t-label text-blue-deep">Assessment for learning</p>
-            <p className="font-display text-2xl font-semibold">Formative</p>
-            <p className="text-ink-2">Happens during teaching, to help you improve while you are still learning.</p>
-            <ul className="grid list-disc gap-1 pl-5 text-ink-2">
-              <li>Exit tickets and quick checks of understanding</li>
-              <li>Conferences with your teacher</li>
-              <li>Peer feedback and self-assessment</li>
-              <li>Drafts, learning logs and journals</li>
-            </ul>
-          </div>
-          <div className="grid content-start gap-3 rounded-2xl bg-forest-tint p-6">
-            <p className="t-label text-forest">Assessment of learning</p>
-            <p className="font-display text-2xl font-semibold">Summative</p>
-            <p className="text-ink-2">Happens at the end of a unit or course, to measure what you have achieved.</p>
-            <ul className="grid list-disc gap-1 pl-5 text-ink-2">
-              <li>End-of-chapter tests</li>
-              <li>Projects and performance tasks</li>
-              <li>Final essays and lab reports</li>
-              <li>The final examination</li>
-            </ul>
-          </div>
-        </div>
-      </Section>
-
-      <Section
         eyebrow="Triangulation"
         title="Evidence from three sources"
         intro={

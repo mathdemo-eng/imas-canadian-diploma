@@ -77,7 +77,7 @@ const rows: Row[] = [
     audience: 'current',
     question: 'Is there an attendance requirement?',
     answer:
-      'Yes. You must keep at least 80% attendance. Below that, you may not be registered for the final examination.',
+      'Yes. You must keep at least 90% attendance. Below that, you may not be registered for the final examination.',
   },
   {
     id: 'drop-subject',

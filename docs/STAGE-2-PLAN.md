@@ -12,7 +12,7 @@ Claude Haiku (model `claude-haiku-5-5`) reads each student's grades, explains wh
 | Part | Content | Source |
 |---|---|---|
 | Programme | 6 cohort tracks, subjects by grade and semester, prep and extension courses, credit-hours | Database (`tracks`, `courses`, `placements`), already built |
-| Rules | 60% continuous assessment (assignments, end-of-chapter tests, project) + 40% final exam, **no midterms**; 60% pass mark; 80% attendance; graduation requirements; IELTS band 6; Semester 1 Sep–Feb, Semester 2 Mar–Jul | Database (`site_settings`) and the site's content, already built |
+| Rules | 60% continuous assessment (assignments, end-of-chapter tests, project) + 40% final exam, **no midterms**; 60% pass mark; 90% attendance; graduation requirements; IELTS band 6; Semester 1 Sep–Feb, Semester 2 Mar–Jul | Database (`site_settings`) and the site's content, already built |
 | Universities | St. Thomas, Mount Allison, Saint Mary's: scholarships and entry requirements | Database (`partners`), already built |
 | School guidance | Support at IMAS (IELTS classes, counsellor, extra help), study strategies per subject, when to refer a student to a teacher, tone, things never to promise (e.g. guaranteed admission) | **New:** an "Advisor handbook" page in the admin panel. Claude drafts it; the school edits it |
 | The student | Track, courses, grades per component, attendance, IELTS results, teacher comments | **New:** grade tables (Phase A) |

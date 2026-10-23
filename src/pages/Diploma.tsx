@@ -106,7 +106,7 @@ export function Diploma() {
           </div>
         </dl>
         <Callout tone="forest" title="Malaysian students">
-          Malaysian citizens also take the Ministry’s compulsory subjects: Bahasa Malaysia, Sejarah, and Pendidikan Islam or Pendidikan Moral.
+          Bahasa Malaysia and Sejarah are offered as optional subjects after school hours. They are not compulsory.
         </Callout>
       </Section>
 

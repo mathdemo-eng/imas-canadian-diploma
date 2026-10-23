@@ -14,7 +14,7 @@ export const settings: Settings = {
   ca_weight: 60,
   exam_weight: 40,
   pass_mark: 60,
-  attendance_min: 80,
+  attendance_min: 90,
   total_credit_hours: 100,
   grade12_credit_hours: 24,
   hero_title: 'Your Canadian high school diploma, earned at IMAS.',

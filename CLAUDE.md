@@ -8,6 +8,14 @@ Owner: the Deputy Head of Secondary (Academic), who is **not a programmer**. Exp
 - Hosting guide: `docs/HOSTING-AND-MAINTENANCE-GUIDE.md`
 - **Next piece of work: the AI academic advisor (Claude Haiku), Phase B of `docs/STAGE-2-PLAN.md`.** Student records (Phase A) are built: read the plan before continuing.
 
+## Pending: three photos from Google Drive (requested 23 October 2026)
+
+Google Drive hosts are blocked by the network policy, so fetch them with the Google Drive connector (`download_file_content`).
+Convert to WebP in `src/assets/photos/` (see the existing ones) and present them with the animated photo components in `src/components/media.tsx` (`RevealImage`, `ParallaxBanner` + `PhotoCaption`, `FloatingPoster`), like the Assessment page.
+- Academic Plan page: Drive files `17LjHFzzpsTmKj5NpC0WSBWZhAl1hEc0S` and `1b_D0tpS5sL7Vcc_USka4Z0OqCtlKPW6x`.
+- Student Hub page: Drive file `1RZvr4voszH1-Z3I3T-V4WZnmCrirF6Bs`.
+Look at each photo first, write accurate alt text, and remove this section when done.
+
 ## Student records rules (agreed October 2026)
 
 - Staff see and edit every student's records; **View as student** (`/admin/students/:id/view`) shows the portal exactly as the student sees it.
@@ -20,11 +28,13 @@ Owner: the Deputy Head of Secondary (Academic), who is **not a programmer**. Exp
 
 ## Content rules from the school (final; they override older documents)
 
-- CAN students have **no midterms**. Assessment: 60% continuous assessment (assignments, end-of-chapter tests, project) + 40% final exam. Pass mark 60%; attendance at least 80%.
+- CAN students have **no midterms**. Assessment: 60% continuous assessment (assignments, end-of-chapter tests, project) + 40% final exam. Pass mark 60%; attendance at least 90%.
 - Semester 1: September–February. Semester 2: March–July.
 - IELTS band 6 is required to graduate. The school prepares students for IELTS and arranges the exam.
 - Minimum programme: 2 years (join in Grade 10 or Grade 11). Two streams: CAN, and the Dual Program (CAD = IGCSE + Canadian diploma).
 - "Extension to Grade 10" courses are not new subjects. "Prep" courses prepare for the Grade 12 subjects.
+- Bahasa Malaysia and Sejarah are **optional** subjects offered after school hours; they are not compulsory and not a graduation requirement (no Pendidikan Islam/Moral requirement either).
+- Assessment: do not present "assessment for/of learning" (formative/summative); it was removed as confusing next to 60/40.
 - Use the course totals stated in the school's subject document. Do not add subjects from the AEI requirements document.
 - Partner universities (per AEI): St. Thomas, Mount Allison, Saint Mary's.
 - No fees on the site; point to Admissions. English only. IMAS is the first accredited NB offshore school in Malaysia.

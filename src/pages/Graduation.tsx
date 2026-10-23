@@ -1,4 +1,4 @@
-import { BadgeCheck, BookMarked, Compass, Languages, Layers3, Percent } from 'lucide-react';
+import { BookMarked, Compass, Languages, Layers3, Percent } from 'lucide-react';
 import { Chapter } from '../components/Chapter';
 import { CreditBars } from '../components/charts';
 import { ButtonLink, Section } from '../components/ui';
@@ -29,17 +29,12 @@ export function Graduation() {
       title: 'Career Life Plan',
       text: 'Build and keep up to date a personalised Career Life Plan for the whole programme.',
     },
-    {
-      icon: BadgeCheck,
-      title: 'National requirements',
-      text: 'Complete the Ministry of Education Malaysia requirements. Malaysian students take Bahasa Malaysia, Sejarah, and Pendidikan Islam or Moral.',
-    },
   ];
 
   return (
-    <Chapter lede="Six requirements stand between you and the New Brunswick High School Diploma. Meet all of them and the diploma is issued once New Brunswick verifies your record.">
+    <Chapter lede="Five requirements stand between you and the New Brunswick High School Diploma. Meet all of them and the diploma is issued once New Brunswick verifies your record.">
       <Section eyebrow="The checklist" title="What you need to graduate">
-        <ol className="grid gap-px overflow-hidden rounded-2xl border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
+        <ol className="grid gap-px overflow-hidden rounded-2xl border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3 sm:[&>li:last-child]:col-span-2">
           {requirements.map(({ icon: Icon, title, text }, i) => (
             <li key={title} className="grid content-start gap-2 bg-sheet p-6">
               <span className="flex items-center justify-between">
