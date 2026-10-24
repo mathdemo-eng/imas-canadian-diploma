@@ -4,6 +4,8 @@
 // HTML (see vite.config.ts), so they are there before any script runs.
 
 export const SITE_NAME = 'IMAS Canadian Diploma';
+/** The name Google shows above the page title in results (its "site name"). */
+export const ORG_NAME = 'IMAS International School';
 
 export interface PageSeo {
   title: string;

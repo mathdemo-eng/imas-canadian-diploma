@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import { CHAPTERS } from './src/chapters';
 import { seedBundle } from './src/content/seed';
-import { PAGE_SEO, SITE_NAME } from './src/seo';
+import { ORG_NAME, PAGE_SEO, SITE_NAME } from './src/seo';
 
 /**
  * The site's public address. Netlify sets URL during builds to the main address
@@ -20,11 +20,12 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 function structuredData() {
   const s = seedBundle.settings;
   const data = [
-    { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: `${SITE_URL}/` },
+    // Google takes the site name shown above results from here (and from og:site_name).
+    { '@context': 'https://schema.org', '@type': 'WebSite', name: ORG_NAME, alternateName: [SITE_NAME, 'IMAS'], url: `${SITE_URL}/` },
     {
       '@context': 'https://schema.org',
       '@type': 'EducationalOrganization',
-      name: 'IMAS International School: Canadian Diploma',
+      name: ORG_NAME,
       alternateName: SITE_NAME,
       url: `${SITE_URL}/`,
       logo: `${SITE_URL}/brand/imas-logo-600.png`,
@@ -53,7 +54,7 @@ function pageFiles(html: string) {
       `<meta name="description" content="${esc(seo.description)}" />`,
       `<link rel="canonical" href="${url}" />`,
       `<meta property="og:type" content="website" />`,
-      `<meta property="og:site_name" content="${SITE_NAME}" />`,
+      `<meta property="og:site_name" content="${ORG_NAME}" />`,
       `<meta property="og:url" content="${url}" />`,
       `<meta property="og:title" content="${esc(seo.title)}" />`,
       `<meta property="og:description" content="${esc(seo.description)}" />`,
