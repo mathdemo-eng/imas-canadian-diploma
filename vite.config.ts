@@ -87,8 +87,12 @@ function searchEngineFiles(): Plugin {
       outDir = resolve(config.root, config.build.outDir);
     },
     // Runs after index.html is written, so every page file starts from the finished page.
+    // shell.html is the plain page for every other address (the admin panel, the Student Portal),
+    // so they never show another page's text while they load. scripts/prerender.mjs then fills
+    // each chapter's file with its full text.
     closeBundle() {
       const html = readFileSync(resolve(outDir, 'index.html'), 'utf8');
+      writeFileSync(resolve(outDir, 'shell.html'), html);
       for (const { file, page } of pageFiles(html)) writeFileSync(resolve(outDir, file), page);
     },
     generateBundle() {
@@ -115,8 +119,16 @@ function searchEngineFiles(): Plugin {
 // Two build targets:
 //  - default: the real website (clean URLs, deployed to Netlify).
 //  - "artifact": a single self-contained HTML file used for private previews.
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isSsrBuild }) => {
   const artifact = mode === 'artifact';
+  // The second build (vite build --ssr src/prerender.tsx) makes the page renderer used by scripts/prerender.mjs.
+  if (isSsrBuild) {
+    return {
+      plugins: [react()],
+      define: { 'import.meta.env.VITE_PREVIEW_BUILD': JSON.stringify('false') },
+      build: { outDir: 'dist-ssr', emptyOutDir: true },
+    };
+  }
   return {
     base: artifact ? './' : '/',
     plugins: [react(), tailwindcss(), ...(artifact ? [viteSingleFile()] : [searchEngineFiles()])],

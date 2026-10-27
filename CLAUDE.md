@@ -45,6 +45,8 @@ npm run build:artifact # single-file preview for a private Artifact
 ```
 
 - Without `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` the site runs on built-in content and the admin panel and portal work in demo mode (student `260001` / `A1234567`).
+- `npm run build` also pre-renders every public chapter with its full text (`src/prerender.tsx`, `scripts/prerender.mjs`, content from the database when the Netlify build has the keys), adds `start-content` JSON so the app starts without a flicker, schema.org data and `llms.txt`. Other addresses (admin, portal) get `shell.html`. Search titles and descriptions: `src/seo.ts`. Anything that runs at import time must work outside a browser.
+- One-off updates for an existing database live in `supabase/updates/` (paste into the SQL Editor).
 - Database: `supabase/migrations/0001_content.sql`, `0002_students.sql`, `0003_records.sql`, `supabase/seed.sql`. Security tests: `supabase/tests/` (run on a local PostgreSQL 16, see its README).
 - Student accounts are created and passwords set only by the Edge Function `supabase/functions/manage-students` (holds the service role key). Never put the service role or secret key in the website or Netlify.
 - Students sign in as `StudentID@imas.edu.my`; first password = ID number; the portal stays locked until they set their own.

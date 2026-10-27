@@ -141,6 +141,32 @@ A new website does not appear on Google until Google has visited it, which can t
 
 **What people type into Google.** Each page has its own title and description, written around phrases families really search for, such as *Canadian high school diploma Malaysia*, *Canadian diploma Malaysia*, *New Brunswick diploma*, *IGCSE and Canadian diploma* and *IMAS Canadian Diploma*. Single words such as "Canadian" or "diploma" on their own are searched worldwide, and no school site can promise to appear for them; be wary of anyone who offers that. What helps most: links from imas.edu.my, kl.imas.edu.my and the school's social media, and keeping the site's content accurate and up to date. To change a page's search title or description, ask Claude (they are in `src/seo.ts`).
 
+### Being found by Google and AI assistants (Gemini, ChatGPT)
+AI answers such as Google's AI Overview (Gemini) are written from websites Google already trusts, and they prefer facts that **several independent sites** agree on. A new site that few other sites mention is rarely quoted, however good it is. So there are two halves to this: the website (done) and IMAS's presence elsewhere on the internet (the school's job, step by step).
+
+**Already built into the website (October 2026):**
+- Every page's full text is in the page itself, so Google, Bing and AI assistants that don't run JavaScript read everything.
+- Each page has its own search title and description, plus schema.org data for the school, the programme and the FAQ.
+- `canadian.imas.edu.my/llms.txt`: a plain summary of the programme's key facts for AI assistants.
+- The Questions page includes questions phrased the way families ask them (add them to an existing site with `supabase/updates/2026-10-search-faqs.sql`: Supabase → SQL Editor → paste → **Run**).
+
+**What the school can do, most useful first:**
+
+| # | Action | Who |
+|---|---|---|
+| 1 | Ask **AEI** to list IMAS (Malaysia) among its accredited New Brunswick schools, with a link to `canadian.imas.edu.my` | You |
+| 2 | Add a **"Canadian Diploma" link** to `canadian.imas.edu.my` on imas.edu.my and kl.imas.edu.my (menu or footer), plus a news post | Whoever edits those sites |
+| 3 | Ask the partner universities (**St. Thomas, Mount Allison, Saint Mary's**) to mention IMAS and link to the site on their international or partner-school pages | You or Admissions |
+| 4 | **Google Business Profile** for IMAS (the school's box on Google Maps): mention the "Canadian High School Diploma (New Brunswick)" in the description, add the link, post an update with photos | Marketing |
+| 5 | A **press release** to Malaysian media and education blogs: "IMAS is the first school in Malaysia accredited by New Brunswick, Canada", with the Ministry of Education approval and MQA listing | Marketing |
+| 6 | List the programme on **Malaysian education directories and international-school comparison sites**, with the same name, description and link | Marketing |
+| 7 | **Social media and YouTube**: posts and a short explainer video titled with the words families search for ("Canadian high school diploma in Malaysia"), each linking to the site | Marketing |
+| 8 | Use **one sentence everywhere**: "IMAS International School offers the New Brunswick (Canada) High School Diploma in Malaysia, and is the first school in Malaysia accredited by New Brunswick." | Everyone |
+
+**Timing:** search results improve over weeks; AI answers usually follow over one to three months as other sites start mentioning IMAS. Nobody can buy or force a place in an AI answer.
+
+**After editing content in the admin panel:** visitors see edits straight away. Search engines see them after the next publish: once you finish a batch of edits, open **Netlify → Deploys → Trigger deploy → Deploy project**.
+
 ---
 
 ## 3. Get the student system ready (step by step, about two hours)

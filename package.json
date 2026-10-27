@@ -6,7 +6,7 @@
   "description": "IMAS International School — Canadian (New Brunswick) High School Diploma website",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/prerender.tsx && node scripts/prerender.mjs",
     "build:artifact": "vite build --mode artifact && node scripts/make-artifact.mjs",
     "preview": "vite preview --port 4173",
     "typecheck": "tsc -b --noEmit",

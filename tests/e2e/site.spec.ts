@@ -564,7 +564,17 @@ test('search engines: every chapter has its own title and description, before an
   expect(raw).toContain('<title>CAN and Dual Program (IGCSE + Canadian Diploma) | IMAS</title>');
   expect(raw).toContain('<link rel="canonical" href="https://canadian.imas.edu.my/pathways" />');
   expect(raw).toContain('"@type":"EducationalOrganization"');
-  expect(raw).toMatch(/<div id="root">.*Two routes to the Canadian high school diploma/);
+  // The full chapter text is in the page itself, for readers that don't run JavaScript.
+  expect(raw).toMatch(/<div id="root">.*Two streams, two ways in, one Canadian diploma/s);
+  expect(raw).toContain('<script type="application/json" id="start-content">');
+  expect(raw).toContain('"@type":"EducationalOccupationalProgram"');
+  const faq = await (await request.get('/faq')).text();
+  expect(faq).toContain('"@type":"FAQPage"');
+  // Other addresses (admin, portal) load the plain app page, never another page's text.
+  const shell = await (await request.get('/shell.html')).text();
+  expect(shell).toMatch(/<div id="root"><\/div>/);
+  const llms = await (await request.get('/llms.txt')).text();
+  expect(llms).toContain('IMAS is the first school in Malaysia accredited by New Brunswick');
 
   await page.goto('/');
   await expect(page).toHaveTitle('Canadian High School Diploma in Malaysia | IMAS International School');

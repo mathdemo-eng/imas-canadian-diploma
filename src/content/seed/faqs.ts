@@ -11,11 +11,25 @@ const rows: Row[] = [
       'It is the official New Brunswick High School Diploma from Canada, taught at IMAS. Graduates receive the same diploma as students in New Brunswick, signed by the province’s Minister of Education.',
   },
   {
+    id: 'where-in-malaysia',
+    audience: 'new',
+    question: 'Where can I study for a Canadian high school diploma in Malaysia?',
+    answer:
+      'At IMAS International School. IMAS teaches the official New Brunswick (Canada) High School Diploma and is the first school in Malaysia accredited by New Brunswick. You study the New Brunswick curriculum at IMAS and graduate with the same diploma as students in Canada.',
+  },
+  {
     id: 'recognised-malaysia',
     audience: 'new',
     question: 'Is the diploma recognised in Malaysia?',
     answer:
       'Yes. The programme is approved by the Ministry of Education Malaysia, and the New Brunswick High School Graduation Diploma is listed by the Malaysian Qualifications Agency (MQA) as an entry qualification for bachelor’s degree programmes.',
+  },
+  {
+    id: 'accreditation',
+    audience: 'new',
+    question: 'Who accredits the Canadian Diploma at IMAS?',
+    answer:
+      'The Province of New Brunswick, through Atlantic Education International (AEI), its government-owned agency that accredits schools around the world to teach the New Brunswick curriculum. AEI inspects the programme at IMAS every year.',
   },
   {
     id: 'can-vs-cad',
@@ -25,11 +39,25 @@ const rows: Row[] = [
       'CAN students follow the Canadian curriculum only. Dual Program (CAD) students also take Cambridge IGCSE examinations, so they finish with two certificates: the IGCSE and the New Brunswick High School Diploma.',
   },
   {
+    id: 'igcse-and-canadian',
+    audience: 'new',
+    question: 'Can I take the IGCSE and a Canadian diploma together?',
+    answer:
+      'Yes, in the Dual Program (CAD). You take the Cambridge IGCSE with Canadian courses alongside, then complete the Canadian Grade 12 year, and graduate with both the IGCSE certificate and the New Brunswick High School Diploma. Choose the Science or the Commerce stream.',
+  },
+  {
     id: 'when-join',
     audience: 'new',
     question: 'When can I join?',
     answer:
       'You can join in Grade 10 (a three-year programme) or in Grade 11 (a two-year programme). Two years is the minimum.',
+  },
+  {
+    id: 'how-long',
+    audience: 'new',
+    question: 'How long does it take to earn the Canadian Diploma?',
+    answer:
+      'At least two years. If you join in Grade 10 you study for three years (Grades 10 to 12); if you join in Grade 11 you study for two years (Grades 11 and 12).',
   },
   {
     id: 'assessment',

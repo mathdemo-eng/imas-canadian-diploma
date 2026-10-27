@@ -6,10 +6,11 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# Single-page app: every address loads index.html, and the site shows the right chapter.
+# Each chapter has its own page file (e.g. pathways.html for /pathways). Every other address
+# (the admin panel, the Student Portal) loads the plain app page, which shows the right screen.
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/shell.html"
   status = 200
 
 [[headers]]

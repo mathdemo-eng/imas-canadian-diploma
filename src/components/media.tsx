@@ -152,11 +152,14 @@ const LEAF_RIGHT: [number, number][] = [
   [0.06, 0.56],
   [0.04, 0.96],
 ];
-const LEAF = new Path2D(
-  [...LEAF_RIGHT, ...LEAF_RIGHT.slice().reverse().map(([x, y]) => [-x, y] as [number, number])]
-    .map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`)
-    .join(' ') + 'Z',
-);
+// Made on first use: Path2D exists only in browsers, and pages are also rendered at build time.
+let leafPath: Path2D | null = null;
+const leafShape = () =>
+  (leafPath ??= new Path2D(
+    [...LEAF_RIGHT, ...LEAF_RIGHT.slice().reverse().map(([x, y]) => [-x, y] as [number, number])]
+      .map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`)
+      .join(' ') + 'Z',
+  ));
 const LEAF_COLOURS = ['#c8102e', '#d9452b', '#e2702f', '#e9a23b', '#b8321e'];
 
 const LEAF_D =
@@ -218,7 +221,7 @@ export function MapleLeaves({ count = 16 }: { count?: number }) {
         ctx!.scale(l.size * Math.max(0.35, Math.abs(Math.cos(t / 900 + l.flip))), l.size);
         ctx!.globalAlpha = 0.88;
         ctx!.fillStyle = l.colour;
-        ctx!.fill(LEAF);
+        ctx!.fill(leafShape());
         ctx!.restore();
       }
     }
