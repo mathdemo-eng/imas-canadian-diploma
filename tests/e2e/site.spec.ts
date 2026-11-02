@@ -595,6 +595,9 @@ test('admin: remove a subject from a group, keeping anything with a result', asy
   const errors = collectErrors(page);
   await page.goto('/admin/records?tab=group');
   await page.getByText('Remove subjects').click();
+  // Remove starts with everyone (by cohort and grade); here we choose two students by ID instead.
+  await expect(page.getByRole('radio', { name: 'Choose by cohort and grade' })).toBeChecked();
+  await page.getByRole('radio', { name: 'Paste their Student IDs' }).check();
   await page.getByRole('textbox', { name: 'Student IDs' }).fill('260001\n260002');
   await page.getByLabel('Find a course').fill('Islamiyat');
   await page.getByRole('checkbox', { name: 'Islamiyat' }).check();
@@ -602,7 +605,7 @@ test('admin: remove a subject from a group, keeping anything with a result', asy
   await page.getByRole('checkbox', { name: 'Biology 111/2' }).check();
   // Nur's Islamiyat and Biology are in progress (removable); Demo Student's three (Biology in Grades 10 and 11, Islamiyat) have marks (kept).
   await expect(page.getByText('2 records from 1 student will be removed')).toBeVisible();
-  await expect(page.getByText(/3 are kept because completed or with a mark/)).toBeVisible();
+  await expect(page.getByText(/3 are kept because they have a mark or feedback/)).toBeVisible();
   await expectAccessible(page);
   await page.getByRole('button', { name: 'Remove 2 records' }).click();
   await page.getByRole('button', { name: 'Yes, remove' }).click();
@@ -613,5 +616,27 @@ test('admin: remove a subject from a group, keeping anything with a result', asy
   await expect(page.getByText('Islamiyat', { exact: true })).toHaveCount(0);
   await go(page, '/admin/students/260001');
   await expect(page.getByText('Islamiyat', { exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('admin: a course marked Completed without a mark can be removed when ticked', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/records?tab=group');
+  // Give Nur a course as Completed (as an upload with an empty Status column would).
+  await page.getByRole('textbox', { name: 'Student IDs' }).fill('260002');
+  await page.getByLabel('Find a course').fill('Cyber');
+  await page.getByRole('checkbox', { name: /Cyber Security/ }).check();
+  await page.getByLabel('Add them as').selectOption({ label: 'Completed' });
+  await page.getByRole('button', { name: 'Add 1 subject to 1 student' }).click();
+  await expect(page.getByText('Added 1 record for 1 student.')).toBeVisible();
+
+  await page.getByText('Remove subjects').click();
+  await page.getByRole('radio', { name: 'Paste their Student IDs' }).check();
+  await expect(page.getByText(/1 is marked Completed but has no mark/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Remove 0 records' })).toBeDisabled();
+  await page.getByLabel(/Also remove the 1 record marked/).check();
+  await page.getByRole('button', { name: 'Remove 1 record' }).click();
+  await page.getByRole('button', { name: 'Yes, remove' }).click();
+  await expect(page.getByText('Removed 1 record from 1 student.')).toBeVisible();
   expect(errors).toEqual([]);
 });

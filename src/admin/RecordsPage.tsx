@@ -395,6 +395,7 @@ function SubjectsForGroup() {
 
   const [mode, setMode] = useState<'add' | 'remove'>('add');
   const [removeYear, setRemoveYear] = useState('');
+  const [includeCompleted, setIncludeCompleted] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [who, setWho] = useState<'list' | 'cohort'>('list');
   const [idText, setIdText] = useState(preset?.join('\n') ?? '');
@@ -451,8 +452,11 @@ function SubjectsForGroup() {
   const matching = (records.data?.courses ?? []).filter(
     (c) => groupIds.has(c.student_id) && picked.has(c.course_id) && (!removeYear || c.academic_year === removeYear),
   );
-  const removable = matching.filter((c) => c.status !== 'completed' && !marked.has(c.id));
+  // Records marked Completed but with no mark (e.g. from a sheet whose Status was left empty) can be removed when ticked.
+  const completedNoMark = matching.filter((c) => c.status === 'completed' && !marked.has(c.id)).length;
+  const removable = matching.filter((c) => !marked.has(c.id) && (includeCompleted || c.status !== 'completed'));
   const keptBack = matching.length - removable.length;
+  const keptWithResult = matching.filter((c) => marked.has(c.id)).length;
   const removePeople = new Set(removable.map((c) => c.student_id)).size;
 
   async function runRemove() {
@@ -513,6 +517,8 @@ function SubjectsForGroup() {
               checked={mode === m}
               onChange={() => {
                 setMode(m);
+                // Removing a course usually means removing it from everyone: start with all students.
+                if (m === 'remove' && !idText.trim()) setWho('cohort');
                 setMsg(null);
                 setConfirming(false);
               }}
@@ -743,8 +749,30 @@ function SubjectsForGroup() {
                 {removeYear ? ` (${removeYear})` : ''}.
               </>
             )}
-            {records.data && keptBack > 0 ? ` ${keptBack} ${keptBack === 1 ? 'is' : 'are'} kept because completed or with a mark (remove those on the student’s page if you must).` : ''}
+            {records.data && keptWithResult > 0
+              ? ` ${keptWithResult} ${keptWithResult === 1 ? 'is' : 'are'} kept because ${keptWithResult === 1 ? 'it has' : 'they have'} a mark or feedback (remove those on the student’s page if you must).`
+              : ''}
+            {records.data && !includeCompleted && completedNoMark > 0
+              ? ` ${completedNoMark} ${completedNoMark === 1 ? 'is' : 'are'} marked Completed but ${completedNoMark === 1 ? 'has' : 'have'} no mark: tick the box below to remove ${completedNoMark === 1 ? 'it' : 'them'} too.`
+              : ''}
           </p>
+          {records.data && completedNoMark > 0 && (
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={includeCompleted}
+                onChange={(e) => {
+                  setIncludeCompleted(e.target.checked);
+                  setConfirming(false);
+                }}
+                className="mt-0.5 h-5 w-5 shrink-0 accent-blue"
+              />
+              <span>
+                Also remove the {completedNoMark} {completedNoMark === 1 ? 'record' : 'records'} marked <strong>Completed</strong> without a mark (for example a
+                course that was never actually taught, uploaded from a sheet with an empty Status).
+              </span>
+            </label>
+          )}
           {confirming ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm">Remove {removable.length} {removable.length === 1 ? 'record' : 'records'}? This can’t be undone.</span>
