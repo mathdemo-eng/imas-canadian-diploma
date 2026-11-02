@@ -104,7 +104,8 @@ const g12s2: Slot[] = ['kinesiology-120', 'world-issues-120', 'entrepreneurship-
 const g12s2Commerce: Slot[] = [...g12s2, 'human-physiology'];
 
 // Canadian Preparatory Program (CAN Grade 11, Semester 2)
-const cpp: Slot[] = ['prep-kinesiology', 'prep-psychology', 'prep-civics', 'prep-world-issues', 'prep-visual-arts', 'prep-mathematics', 'prep-english'];
+// World Issues – Prep is not taught for now (school decision, November 2026); the course stays in the course list for later.
+const cpp: Slot[] = ['prep-kinesiology', 'prep-psychology', 'prep-civics', 'prep-visual-arts', 'prep-mathematics', 'prep-english'];
 
 // Grade 10, Science (CAN and Dual Science)
 const g10Science: Slot[] = ['arabic-110', 'biology-111', 'chemistry-111', 'physics-111', 'nrf-10', 'ela-f10', 'reading-tutor-120', 'islamiyat', 'computer-science-110'];

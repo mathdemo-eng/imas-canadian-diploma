@@ -269,7 +269,15 @@ function EditorForm({
       onDone(null);
       onClose();
     } catch (err) {
-      setStatus({ tone: 'error', text: `Not deleted: ${err instanceof Error ? err.message : String(err)}` });
+      const msg = err instanceof Error ? err.message : String(err);
+      // The database keeps a course while students have it in their records, so their history is never lost.
+      const inRecords = config.key === 'courses' && /student_courses/.test(msg);
+      setStatus({
+        tone: 'error',
+        text: inRecords
+          ? 'Not deleted: some students have this course in their records. To stop teaching it, remove it from the cohort plans (Subjects in tracks), then from students’ records (Subjects & grades → Subjects for a group → Remove). You can keep the course here for later: it only shows on the website where a cohort plan uses it.'
+          : `Not deleted: ${msg}`,
+      });
       setBusy(false);
     }
   }

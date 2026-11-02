@@ -313,6 +313,23 @@ export async function deleteStudentCourse(id: string) {
   if (error) fail(error);
 }
 
+/** Removes several subject records at once (with any mark or feedback on them). */
+export async function deleteStudentCourses(ids: string[]) {
+  if (ids.length === 0) return;
+  if (!supabaseConfigured) {
+    const gone = new Set(ids);
+    demo.records.courses = demo.records.courses.filter((c) => !gone.has(c.id));
+    demo.records.marks = demo.records.marks.filter((m) => !gone.has(m.student_course_id));
+    demo.records.feedback = demo.records.feedback.filter((f) => !gone.has(f.student_course_id));
+    return;
+  }
+  const sb = await getSupabase();
+  for (const part of chunks(ids)) {
+    const { error } = await sb.from('student_courses').delete().in('id', part);
+    if (error) fail(error);
+  }
+}
+
 export async function saveMarks(marks: Mark[]) {
   if (marks.length === 0) return;
   if (!supabaseConfigured) {

@@ -162,9 +162,10 @@ describe('promotion suggestions', () => {
   });
   it('plans a whole year from the cohort plan', () => {
     const rows = planYearRows(student('260002'), content, 11, '2027-2028');
-    // CAN Grade 11: 8 courses in Semester 1 and the 7 Grade 12 preparation courses in Semester 2.
-    expect(rows).toHaveLength(15);
-    expect(rows.filter((r) => r.term === 'S2')).toHaveLength(7);
+    // CAN Grade 11: 8 courses in Semester 1 and the 6 Grade 12 preparation courses in Semester 2
+    // (World Issues – Prep is not taught for now).
+    expect(rows).toHaveLength(14);
+    expect(rows.filter((r) => r.term === 'S2')).toHaveLength(6);
     expect(rows.every((r) => r.grade_level === 11 && r.academic_year === '2027-2028')).toBe(true);
   });
 });

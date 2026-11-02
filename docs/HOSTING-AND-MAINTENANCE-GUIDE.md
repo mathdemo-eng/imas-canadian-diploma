@@ -348,6 +348,13 @@ The admin menu's **Students** group holds everything about students. Each studen
 3. **Year and details:** the academic year, semester and course grade ("As in their plan" uses each student's cohort plan), **Add them as** (In progress, Upcoming or Completed), and a teacher if one teacher teaches all of them.
 4. Check the line *"… subjects × … students = … records"* and click **Add … subjects to … students**. Subjects a student already has for that year are left as they are, so running it twice does no harm.
 
+**Removing a subject from a group** works the same way: choose **Remove subjects** at the top of **Subjects for a group**, pick the students and subjects (and a year, or **Any year**), and click **Remove … records**. Only records without a result are removed; anything completed or with a mark stays.
+
+**Stopping a course (for now or for good):**
+1. **Subjects in tracks:** delete the course from each cohort plan. It disappears from the Academic Plan and isn't given to students again.
+2. **Subjects & grades → Subjects for a group → Remove subjects:** choose **by cohort and grade** (All cohorts, All grades), tick the course, choose **Any year**, and remove.
+3. Keep the course itself in **Courses**: it only shows on the website where a cohort plan uses it, so it's ready if you teach it again. (Deleting it is refused while any student still has it in their records, so their history is never lost.)
+
 To fix one record, open the student and click **Edit** on the row (status, semester, teacher, marks, or remove it).
 
 **Start of the year:** **Subjects & grades → Plan a year** gives every student (or a cohort, grade or one student) all the courses of their cohort's plan for their grade, so their portal shows what they are studying. Safe to run again.

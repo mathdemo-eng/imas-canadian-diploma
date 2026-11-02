@@ -590,3 +590,28 @@ test('search engines: every chapter has its own title and description, before an
   await page.goto('/portal');
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
 });
+
+test('admin: remove a subject from a group, keeping anything with a result', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/records?tab=group');
+  await page.getByText('Remove subjects').click();
+  await page.getByRole('textbox', { name: 'Student IDs' }).fill('260001\n260002');
+  await page.getByLabel('Find a course').fill('Islamiyat');
+  await page.getByRole('checkbox', { name: 'Islamiyat' }).check();
+  await page.getByLabel('Find a course').fill('Biology');
+  await page.getByRole('checkbox', { name: 'Biology 111/2' }).check();
+  // Nur's Islamiyat and Biology are in progress (removable); Demo Student's three (Biology in Grades 10 and 11, Islamiyat) have marks (kept).
+  await expect(page.getByText('2 records from 1 student will be removed')).toBeVisible();
+  await expect(page.getByText(/3 are kept because completed or with a mark/)).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Remove 2 records' }).click();
+  await page.getByRole('button', { name: 'Yes, remove' }).click();
+  await expect(page.getByText('Removed 2 records from 1 student. 3 kept because they are completed or have a mark.')).toBeVisible();
+
+  await go(page, '/admin/students/260002');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Nur Iman Hassan');
+  await expect(page.getByText('Islamiyat', { exact: true })).toHaveCount(0);
+  await go(page, '/admin/students/260001');
+  await expect(page.getByText('Islamiyat', { exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});

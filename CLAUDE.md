@@ -27,6 +27,7 @@ Owner: the Deputy Head of Secondary (Academic), who is **not a programmer**. Exp
 - "Extension to Grade 10" courses are not new subjects. "Prep" courses prepare for the Grade 12 subjects.
 - Bahasa Malaysia and Sejarah are **optional** subjects offered after school hours; they are not compulsory and not a graduation requirement (no Pendidikan Islam/Moral requirement either).
 - Assessment: do not present "assessment for/of learning" (formative/summative); it was removed as confusing next to 60/40.
+- World Issues – Prep (`prep-world-issues`) is not taught for now (November 2026): removed from the cohort plans, kept in the course list for later. World Issues 120 (Grade 12) is unchanged.
 - Use the course totals stated in the school's subject document. Do not add subjects from the AEI requirements document.
 - Partner universities (per AEI): St. Thomas, Mount Allison, Saint Mary's.
 - No fees on the site; point to Admissions. English only. IMAS is the first accredited NB offshore school in Malaysia.

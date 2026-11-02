@@ -5,12 +5,12 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { TERM_LABEL, courseTitle } from '../content/labels';
 import type { Term } from '../content/types';
 import { groupSubjectRows, planYearRows, type GroupSubjectOptions } from '../lib/progress';
-import { addMissingStudentCourses, saveSheetRows, type CourseStatus } from '../lib/records';
+import { addMissingStudentCourses, deleteStudentCourses, saveSheetRows, type CourseStatus } from '../lib/records';
 import { STATUS_LABEL, downloadText, exportRecordsCsv, groupSheetCsv, parseRecordsSheet, templateCsv, type SheetKind } from '../lib/sheets';
 import type { StudentRecord } from '../lib/students';
 import { formatMark } from '../portal/ui';
 import { useAdmin } from './AdminLayout';
-import { Field, Message, Panel, btn, downloadsOff, errorText, input, refreshRecords, useAllRecords, useCurrentYear, useStudents, useTeachers } from './kit';
+import { Field, Message, Panel, btn, downloadsOff, errorText, input, refreshRecords, useAllRecords, useCurrentYear, useStudents, useTeachers, yearOptions } from './kit';
 import { Problems, YearSelect } from './StudentsPage';
 
 type Tab = SheetKind | 'group' | 'plan';
@@ -393,6 +393,9 @@ function SubjectsForGroup() {
   const location = useLocation();
   const preset = (location.state as { studentList?: string[] } | null)?.studentList;
 
+  const [mode, setMode] = useState<'add' | 'remove'>('add');
+  const [removeYear, setRemoveYear] = useState('');
+  const [confirming, setConfirming] = useState(false);
   const [who, setWho] = useState<'list' | 'cohort'>('list');
   const [idText, setIdText] = useState(preset?.join('\n') ?? '');
   const [cohort, setCohort] = useState('');
@@ -416,7 +419,7 @@ function SubjectsForGroup() {
   const group: StudentRecord[] =
     who === 'list'
       ? typed.flatMap((id) => byId.get(id.toLowerCase()) ?? [])
-      : all.filter((s) => s.enrolment_status === 'active' && (!cohort || s.track_id === cohort) && (!grade || String(s.current_grade) === grade));
+      : all.filter((s) => (mode === 'remove' || s.enrolment_status === 'active') && (!cohort || s.track_id === cohort) && (!grade || String(s.current_grade) === grade));
 
   const courses = [...content.courses].sort((a, b) => a.name.localeCompare(b.name) || a.code.localeCompare(b.code));
   const q = find.trim().toLowerCase();
@@ -442,6 +445,34 @@ function SubjectsForGroup() {
   const { rows, skipped } = groupSubjectRows(group, ids, content, options, records.data?.courses ?? []);
   const people = group.length - skipped.length;
 
+  // Removing: only records with no result yet (not completed, no mark, no feedback), so no student's history is lost.
+  const groupIds = new Set(group.map((s) => s.id));
+  const marked = new Set([...(records.data?.marks ?? []).map((m) => m.student_course_id), ...(records.data?.feedback ?? []).map((f) => f.student_course_id)]);
+  const matching = (records.data?.courses ?? []).filter(
+    (c) => groupIds.has(c.student_id) && picked.has(c.course_id) && (!removeYear || c.academic_year === removeYear),
+  );
+  const removable = matching.filter((c) => c.status !== 'completed' && !marked.has(c.id));
+  const keptBack = matching.length - removable.length;
+  const removePeople = new Set(removable.map((c) => c.student_id)).size;
+
+  async function runRemove() {
+    setBusy(true);
+    setMsg(null);
+    setConfirming(false);
+    try {
+      await deleteStudentCourses(removable.map((c) => c.id));
+      await refreshRecords(qc);
+      setMsg({
+        ok: true,
+        text: `Removed ${removable.length} ${removable.length === 1 ? 'record' : 'records'} from ${removePeople} ${removePeople === 1 ? 'student' : 'students'}.${keptBack ? ` ${keptBack} kept because they are completed or have a mark.` : ''}`,
+      });
+    } catch (e) {
+      setMsg({ ok: false, text: errorText(e) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function run() {
     setBusy(true);
     setMsg(null);
@@ -462,9 +493,47 @@ function SubjectsForGroup() {
 
   return (
     <>
+      <fieldset className="flex flex-wrap gap-2">
+        <legend className="sr-only">Add or remove</legend>
+        {(
+          [
+            ['add', 'Add subjects'],
+            ['remove', 'Remove subjects'],
+          ] as const
+        ).map(([m, label]) => (
+          <label
+            key={m}
+            className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 font-semibold has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-blue ${
+              mode === m ? 'border-blue bg-blue text-on-blue' : 'border-rule-strong bg-sheet hover:border-blue'
+            }`}
+          >
+            <input
+              type="radio"
+              name="group-mode"
+              checked={mode === m}
+              onChange={() => {
+                setMode(m);
+                setMsg(null);
+                setConfirming(false);
+              }}
+              className="sr-only"
+            />
+            {label}
+          </label>
+        ))}
+      </fieldset>
       <p className="measure text-ink-2">
-        Give the same subjects to a group of students in one go: <strong className="text-ink">every subject you tick goes to every student</strong> you choose. (In a
-        sheet, each row is one student and one course, so this saves writing a row for each pair.)
+        {mode === 'add' ? (
+          <>
+            Give the same subjects to a group of students in one go: <strong className="text-ink">every subject you tick goes to every student</strong> you choose.
+            (In a sheet, each row is one student and one course, so this saves writing a row for each pair.)
+          </>
+        ) : (
+          <>
+            Take subjects out of a group of students’ records, for example a course the school is no longer teaching. Only subjects{' '}
+            <strong className="text-ink">without a result</strong> are removed: anything completed or with a mark stays, so no student’s history is lost.
+          </>
+        )}
       </p>
 
       <Panel id="group-who" title="1. Which students">
@@ -573,6 +642,7 @@ function SubjectsForGroup() {
         </fieldset>
       </Panel>
 
+{mode === 'add' ? (
       <Panel id="group-how" title="3. Year and details">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <YearSelect id="group-year" label="Academic year" value={year} onChange={setYear} current={current} />
@@ -643,6 +713,57 @@ function SubjectsForGroup() {
           {msg && <Message tone={msg.ok ? 'ok' : 'error'}>{msg.text}</Message>}
         </div>
       </Panel>
+      ) : (
+      <Panel id="group-remove" title="3. Which year">
+        <div className="grid gap-3 sm:max-w-xs">
+          <Field id="group-remove-year" label="Academic year">
+            <select id="group-remove-year" value={removeYear} onChange={(e) => setRemoveYear(e.target.value)} className={input}>
+              <option value="">Any year</option>
+              {yearOptions(current, 4, 2).map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <div className="grid gap-3 rounded-xl border-2 border-maroon p-4">
+          <p className="text-ink">
+            {!records.data ? (
+              'Loading records…'
+            ) : ids.length === 0 || group.length === 0 ? (
+              'Choose the students and tick at least one subject.'
+            ) : removable.length === 0 ? (
+              `None of these students has ${ids.length === 1 ? 'this subject' : 'these subjects'} without a result${removeYear ? ` in ${removeYear}` : ''}, so there is nothing to remove.`
+            ) : (
+              <>
+                <strong>
+                  {removable.length} {removable.length === 1 ? 'record' : 'records'} from {removePeople} {removePeople === 1 ? 'student' : 'students'} will be removed
+                </strong>
+                {removeYear ? ` (${removeYear})` : ''}.
+              </>
+            )}
+            {records.data && keptBack > 0 ? ` ${keptBack} ${keptBack === 1 ? 'is' : 'are'} kept because completed or with a mark (remove those on the student’s page if you must).` : ''}
+          </p>
+          {confirming ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm">Remove {removable.length} {removable.length === 1 ? 'record' : 'records'}? This can’t be undone.</span>
+              <button type="button" onClick={runRemove} disabled={busy} className={btn.danger}>
+                Yes, remove
+              </button>
+              <button type="button" onClick={() => setConfirming(false)} className={btn.quiet}>
+                Keep them
+              </button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setConfirming(true)} disabled={busy || removable.length === 0} className={`${btn.danger} w-fit`}>
+              {busy ? 'Removing…' : `Remove ${removable.length} ${removable.length === 1 ? 'record' : 'records'}`}
+            </button>
+          )}
+          {msg && <Message tone={msg.ok ? 'ok' : 'error'}>{msg.text}</Message>}
+        </div>
+      </Panel>
+      )}
     </>
   );
 }
