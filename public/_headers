@@ -2,3 +2,7 @@
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+
+# Campus films and previews: keep for a day, so repeat visits don't download them again.
+/media/*
+  Cache-Control: public, max-age=86400

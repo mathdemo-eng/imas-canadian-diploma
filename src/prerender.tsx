@@ -11,6 +11,7 @@ import { routes } from './router';
 
 export { CHAPTERS } from './chapters';
 export { loadContent } from './content/source';
+export { CAMPUS_FILMS, FILM_ORDER, FILM_SECONDS } from './content/campusFilms';
 
 export async function renderPage(path: string, content: ContentBundle): Promise<string> {
   const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false } } });

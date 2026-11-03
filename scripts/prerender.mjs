@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
-const { renderPage, loadContent, CHAPTERS } = await import(new URL('../dist-ssr/prerender.js', import.meta.url).href);
+const { renderPage, loadContent, CHAPTERS, CAMPUS_FILMS, FILM_ORDER, FILM_SECONDS } = await import(new URL('../dist-ssr/prerender.js', import.meta.url).href);
 
 const SITE_URL = (process.env.URL || process.env.SITE_URL || 'https://canadian.imas.edu.my').replace(/\/+$/, '');
 const fileFor = (path) => (path === '/' ? 'index.html' : `${path.slice(1)}.html`);
@@ -50,7 +50,24 @@ const faqPage = faqs.length
     }
   : null;
 
-const extraData = { '/': [programme], '/pathways': [programme], '/faq': faqPage ? [faqPage] : [] };
+// The two campus films on the Contact page, so search engines can list them as videos.
+const filmLength = `PT${Math.floor(FILM_SECONDS / 60)}M${Math.round(FILM_SECONDS % 60)}S`;
+const campusFilms = FILM_ORDER.map((id) => {
+  const f = CAMPUS_FILMS[id];
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: `${f.name} campus film`,
+    description: `A one-minute tour of the ${f.name} campus of IMAS International School, Malaysia: ${f.inFilm.join(', ').toLowerCase()}.`,
+    thumbnailUrl: `${SITE_URL}/media/campus-${id}.webp`,
+    contentUrl: `${SITE_URL}/media/campus-${id}.mp4`,
+    uploadDate: '2026-11-03',
+    duration: filmLength,
+    inLanguage: 'en',
+  };
+});
+
+const extraData = { '/': [programme], '/pathways': [programme], '/faq': faqPage ? [faqPage] : [], '/contact': campusFilms };
 
 let rendered = 0;
 for (const chapter of CHAPTERS) {
@@ -96,6 +113,7 @@ const llms = [
   s.admissions_email_kl || s.admissions_phone_kl
     ? `- Admissions, IMAS Kuala Lumpur: ${[s.admissions_email_kl, s.admissions_phone_kl, s.admissions_mobile_kl].filter(Boolean).join(', ')}.`
     : '',
+  `- Campus films: one-minute tours of ${FILM_ORDER.map((id) => CAMPUS_FILMS[id].name).join(' and ')} on the Contact & Admissions page (${SITE_URL}/contact).`,
   '',
   '## Pages',
   '',

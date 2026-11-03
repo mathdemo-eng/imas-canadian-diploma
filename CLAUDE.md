@@ -30,6 +30,7 @@ Owner: the Deputy Head of Secondary (Academic), who is **not a programmer**. Exp
 - World Issues – Prep (`prep-world-issues`) is not taught for now (November 2026): removed from the cohort plans, kept in the course list for later. World Issues 120 (Grade 12) is unchanged.
 - Use the course totals stated in the school's subject document. Do not add subjects from the AEI requirements document.
 - Partner universities (per AEI): St. Thomas, Mount Allison, Saint Mary's.
+- Campus films (Contact page, November 2026): IMAS Selangor and IMAS Kuala Lumpur, both exactly 1:04 on the KL tour's music (128 BPM, cut on the beat grid; music shortened by whole 15 s phrases). The Selangor film shows facilities only, no interviews or people talking. Files in `public/media` (WebM + MP4, each under 10 MB, plus silent `-loop` previews); data in `src/content/campusFilms.ts`; player `src/components/CampusCinema.tsx` (side by side in sync, switch campus without the music stopping). Keep both films the same length and music.
 - No fees on the site; point to Admissions. English only. IMAS is the first accredited NB offshore school in Malaysia.
 
 ## Code

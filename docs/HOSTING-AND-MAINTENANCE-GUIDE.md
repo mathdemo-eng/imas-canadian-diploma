@@ -372,6 +372,22 @@ To fix one record, open the student and click **Edit** on the row (status, semes
 
 **Course feedback** (admin → **Feedback**): after each completed course, students answer a short form about the teacher (subject knowledge, clarity, lesson design, engagement, feedback, assessment, support, respect) and the course. **A student sees a course's mark only after sending feedback on it**, and a Grade 12 student sees the **Canadian Diploma Graduate** label only after sending feedback on every Grade 12 course. The **Feedback** page shows who has finished, averages by teacher and course, and comments, all anonymous; a breakdown appears only once 3 or more students have answered. To let a student redo their feedback, open the student → **Edit** on the course → **Let them redo feedback**. To switch the rule off, untick it in **Site settings → Student records**.
 
+### Campus films (Contact & Admissions page)
+The Contact & Admissions page opens with two short films, **IMAS Selangor** and **IMAS Kuala Lumpur**. Both are **1:04** long and use the same music (the soundtrack of the IMAS Kuala Lumpur tour video). The Selangor film shows only the campus and its facilities; the interviews were left out.
+
+- **Before anything plays**, each half of the screen shows a silent preview of its campus. A small pause button stops the previews. They stay still for visitors who have asked their device for less motion or to save data.
+- **Visitors can** watch one campus, or **Side by side** to play both together in time. They can switch campus in the middle of a film (with the switch under the screen, or by tapping the narrow strip at the side) and the music carries on without stopping.
+- **At the end**, a closing card offers **Contact Selangor / Contact Kuala Lumpur**, which brings that campus's admissions card into view.
+- **Each admissions card** has **Watch the film** and an **In the film** list of what its film shows (for visitors who can't watch, and for search engines).
+
+**Where the films are kept.** Videos are too large for the admin panel, so they live with the website's code on GitHub, in the folder `public/media`: `campus-selangor` and `campus-kl` (the films), `…-loop` (the silent previews) and a picture of each campus. Each film comes as **WebM** (smaller; used by Chrome, Edge and Firefox) and **MP4** (used by Safari on iPhone, iPad and Mac). Each file is under 10 MB.
+
+**Replacing a film.** Ask Claude (section 8), for example: *"Replace the Selangor campus film with this video: [Google Drive link]. Keep it 1:04 with the same music."* Set the Drive file to **Anyone with the link → Viewer** first. Both films must keep the same length and music so they can play side by side.
+
+**Music.** The soundtrack comes from the IMAS Kuala Lumpur tour video. Please confirm with whoever produced that video (or the music library it came from) that the licence covers using the track on the website and with the Selangor footage. If it doesn't, Claude can fit a different licensed track to both films.
+
+**Bandwidth.** Each film watched downloads about 9 MB (both side by side, about 18 MB); the previews about 1 MB each. Netlify's plan includes a monthly bandwidth allowance: check **Netlify → your site → Usage** now and then. If the site ever becomes very busy, the films can be moved to a video host without changing the page.
+
 ### Adding another editor
 1. In Supabase open **Authentication → Users → Add user → Create new user**. Enter their IMAS email and a temporary password, tick **Auto Confirm User**, and create the user.
 2. Open **Table Editor → admins → Insert row**, type the same email in lower case and save.
@@ -396,7 +412,7 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 | Service | Stage 1 | Stage 2 (student portal) |
 |---|---|---|
 | GitHub | Free (private repository) | Free |
-| Netlify | Free plan is usually enough | Free or paid, depending on traffic |
+| Netlify | Free plan is usually enough (the campus films use about 9 MB of bandwidth each time one is watched) | Free or paid, depending on traffic |
 | Supabase | Free plan works. Free projects are paused after a period of inactivity. | **Pro recommended now that marks are stored**: daily backups, no pausing, more capacity |
 | Sign-in for staff and 300 students | Included in Supabase, well within the free plan's limits | Included |
 | Website address | Free: `canadian.imas.edu.my` (set up with IT) | Free |
@@ -411,6 +427,7 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 | What you see | What to do |
 |---|---|
 | An edit doesn't show on the site | Reload the page. To be sure you have the newest version, press **Ctrl+Shift+R** (**Cmd+Shift+R** on a Mac). |
+| A campus film shows *"The film could not be played just now"* | Check the internet connection and click **Try again**. If it happens on every device, open **Netlify → Deploys** and check the latest deploy finished; the films are part of it. |
 | A pink **Demo mode** banner on the live site | The two environment variables are missing. Add them (Step 4), then **Trigger deploy**. |
 | A red box: **The website can't connect to its database** | The box says which value is wrong. Fix it under **Project configuration → Environment variables** in Netlify, then **Trigger deploy**. |
 | Admin dashboard says **built-in content** | The site can't reach the database. In Supabase, check the project isn't paused (click **Restore project** if it is), then reload. |

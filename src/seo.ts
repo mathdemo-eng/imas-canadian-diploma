@@ -64,7 +64,7 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   '/contact': {
     title: 'Contact Admissions | IMAS Canadian Diploma',
     description:
-      'Talk to the IMAS International School admissions teams at the Selangor and Kuala Lumpur campuses about the Canadian Diploma, by phone, email or an enquiry in Gmail.',
+      'Watch one-minute films of the IMAS Selangor and Kuala Lumpur campuses, then talk to each campus’s admissions team about the Canadian Diploma by phone, email or an enquiry in Gmail.',
   },
   '/portal': {
     title: 'Student Portal | IMAS Canadian Diploma',

@@ -120,6 +120,63 @@ test('Make an enquiry opens a Gmail message to admissions, and both IMAS website
   await expect(page.getByRole('article', { name: 'IMAS Selangor' })).toContainText('info@imas.edu.my');
 });
 
+const film = (page: Page, id: string) => page.locator(`video[data-campus="${id}"]`);
+const filmState = (page: Page, id: string) =>
+  film(page, id).evaluate((v: HTMLVideoElement) => ({ t: v.currentTime, paused: v.paused, muted: v.muted }));
+
+test('campus films play side by side in time, switch campus without restarting, and end with contact options', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/contact');
+  await page.locator('[data-view]').scrollIntoViewIfNeeded();
+  await expect(page.getByRole('radio', { name: /Side by side|Both/ })).toHaveAttribute('aria-checked', 'true');
+
+  // Both films together, with one soundtrack (only one of them has its sound on).
+  await page.getByRole('button', { name: 'Play both films', exact: true }).click();
+  await expect.poll(async () => (await filmState(page, 'kl')).t, { timeout: 20_000 }).toBeGreaterThan(1.5);
+  const [s, k] = [await filmState(page, 'selangor'), await filmState(page, 'kl')];
+  expect(Math.abs(s.t - k.t)).toBeLessThan(0.3);
+  expect([s.muted, k.muted].filter((m) => !m)).toHaveLength(1);
+
+  // Kuala Lumpur on its own: it carries on from the same moment, with sound; Selangor stops.
+  const kl = page.getByRole('radio', { name: /Kuala Lumpur|KL/ });
+  await kl.click();
+  await expect(kl).toHaveAttribute('aria-checked', 'true');
+  await expect.poll(async () => (await filmState(page, 'selangor')).paused).toBe(true);
+  const solo = await filmState(page, 'kl');
+  expect(solo.t).toBeGreaterThan(1);
+  expect(solo.muted).toBe(false);
+  await expect(page.getByRole('article', { name: 'IMAS Kuala Lumpur' })).toContainText('Now showing');
+
+  await page.getByRole('button', { name: 'Pause' }).click();
+  await expect.poll(async () => (await filmState(page, 'kl')).paused).toBe(true);
+
+  // The end: the closing card leads to that campus's admissions details.
+  await page.getByRole('slider', { name: 'Position in the film' }).fill('63.4');
+  await page.getByRole('button', { name: 'Play the IMAS Kuala Lumpur film' }).click();
+  await expect(page.getByText('Come and see IMAS Kuala Lumpur for yourself')).toBeVisible({ timeout: 20_000 });
+  await page.getByRole('button', { name: 'Contact Kuala Lumpur' }).click();
+  await expect(page.locator('#campus-kl')).toBeFocused();
+  expect(errors).toEqual([]);
+});
+
+test('a campus card starts its own film', async ({ page }) => {
+  await page.goto('/contact');
+  await page.getByRole('button', { name: 'Watch the film of IMAS Selangor' }).click();
+  await expect(page.getByRole('radio', { name: 'Selangor' })).toHaveAttribute('aria-checked', 'true');
+  await expect.poll(async () => (await filmState(page, 'selangor')).t, { timeout: 20_000 }).toBeGreaterThan(0.5);
+  expect((await filmState(page, 'kl')).paused).toBe(true);
+});
+
+test('with reduced motion the campus previews stay still', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/contact');
+  await page.locator('[data-view]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(800);
+  const playing = await page.locator('[data-view] video[aria-hidden="true"][loop]').evaluateAll((vs) => vs.filter((v) => !(v as HTMLVideoElement).paused).length);
+  expect(playing).toBe(0);
+  await expect(page.getByRole('button', { name: /moving previews/ })).toHaveCount(0);
+});
+
 test('student photos and the SKIPS badge load', async ({ page }) => {
   await page.goto('/assessment');
   const library = page.getByRole('img', { name: /reading in the school library/ });
