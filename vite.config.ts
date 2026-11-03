@@ -33,6 +33,10 @@ function structuredData() {
       email: s.admissions_email,
       telephone: s.admissions_phone.replace(/\s+/g, ''),
       address: { '@type': 'PostalAddress', addressCountry: 'MY' },
+      contactPoint: [
+        { '@type': 'ContactPoint', contactType: 'admissions', areaServed: 'MY', name: 'IMAS Selangor', email: s.admissions_email, telephone: s.admissions_phone.replace(/\s+/g, '') },
+        { '@type': 'ContactPoint', contactType: 'admissions', areaServed: 'MY', name: 'IMAS Kuala Lumpur', email: s.admissions_email_kl, telephone: s.admissions_phone_kl.replace(/\s+/g, '') },
+      ],
       sameAs: [s.website_selangor, s.website_kl],
     },
   ];

@@ -92,7 +92,10 @@ const llms = [
   `- Graduation: ${s.total_credit_hours} credit-hours, including ${s.grade12_credit_hours} at Grade 12; a pass in every course; IELTS band ${s.ielts_min_band} (IMAS prepares students and arranges the exam); a Career Life Plan.`,
   '- Academic year: Semester 1 from September to February, Semester 2 from March to July.',
   partners.length ? `- Partner universities in Canada: ${partners.map((p) => p.name).join(', ')}.` : '',
-  `- Admissions: ${s.admissions_email}, ${s.admissions_phone}.`,
+  `- Admissions, IMAS Selangor: ${s.admissions_email}, ${s.admissions_phone}.`,
+  s.admissions_email_kl || s.admissions_phone_kl
+    ? `- Admissions, IMAS Kuala Lumpur: ${[s.admissions_email_kl, s.admissions_phone_kl, s.admissions_mobile_kl].filter(Boolean).join(', ')}.`
+    : '',
   '',
   '## Pages',
   '',

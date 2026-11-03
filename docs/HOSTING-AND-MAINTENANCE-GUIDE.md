@@ -298,7 +298,7 @@ Sign in at **canadian.imas.edu.my/admin** (or use **Staff sign-in** at the botto
 | Post news for students | **Announcements** | **Add announcement**. Newest shows first in the Student Hub. |
 | Share a handbook or form | **Documents** | Upload the file to Google Drive, set **Share → Anyone with the link → Viewer**, copy the link and paste it in. |
 | Change the phone number, IELTS band or assessment weights | **Site settings** | Every page that mentions the figure updates. |
-| Change the enquiry email or the IMAS website links | **Site settings** | **Make an enquiry** opens a new Gmail message to the admissions email, with the subject you set. The IMAS Selangor and IMAS Kuala Lumpur links appear on the Contact page and in the footer. |
+| Change a campus's admissions phone, email or website | **Site settings** | Two groups: **Admissions: IMAS Selangor** and **Admissions: IMAS Kuala Lumpur** (phone, optional mobile, email, website). Each campus has its own card on the Contact page, with **Make an enquiry in Gmail** addressed to that campus, and both appear in the footer. Leave a campus's phone and email empty to hide it. |
 | Add or change a question | **Questions & answers** | Choose who it is mainly for: new or current students. |
 | Change my own password | **Dashboard → Your password** | Type the new password twice and save. |
 | Set the academic year, pass mark rules for promotion, or switch the feedback rule | **Site settings → Student records** | See section 4, "Student records". |

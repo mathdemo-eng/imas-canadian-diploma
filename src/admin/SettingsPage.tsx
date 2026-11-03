@@ -20,13 +20,26 @@ const GROUPS: { title: string; fields: SettingField[] }[] = [
     ],
   },
   {
-    title: 'Admissions contact',
+    title: 'Admissions: IMAS Selangor',
     fields: [
       { key: 'admissions_phone', label: 'Phone number', type: 'text' },
       { key: 'admissions_email', label: 'Email', type: 'email' },
-      { key: 'enquiry_subject', label: 'Enquiry email subject', type: 'text', help: '“Make an enquiry” opens a new Gmail message to the admissions email with this subject.' },
-      { key: 'website_selangor', label: 'IMAS Selangor website', type: 'url' },
-      { key: 'website_kl', label: 'IMAS Kuala Lumpur website', type: 'url' },
+      { key: 'website_selangor', label: 'Website', type: 'url' },
+    ],
+  },
+  {
+    title: 'Admissions: IMAS Kuala Lumpur',
+    fields: [
+      { key: 'admissions_phone_kl', label: 'Phone number', type: 'text' },
+      { key: 'admissions_mobile_kl', label: 'Mobile number', type: 'text', help: 'Optional. Leave empty to hide it.' },
+      { key: 'admissions_email_kl', label: 'Email', type: 'email', help: 'Leave the phone and email empty to hide the Kuala Lumpur campus on the Contact page.' },
+      { key: 'website_kl', label: 'Website', type: 'url' },
+    ],
+  },
+  {
+    title: 'Enquiry emails',
+    fields: [
+      { key: 'enquiry_subject', label: 'Enquiry email subject', type: 'text', help: '“Make an enquiry in Gmail” opens a new Gmail message to that campus’s admissions email with this subject.' },
     ],
   },
   {

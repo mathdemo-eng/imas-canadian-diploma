@@ -6,7 +6,7 @@ import skipsDark from '../assets/photos/skips-dark.webp';
 import skipsLight from '../assets/photos/skips-light.webp';
 import { CHAPTERS } from '../chapters';
 import { useContent } from '../content/hooks';
-import { gmailEnquiryUrl, SCHOOL_SITES } from '../lib/contact';
+import { campuses, SCHOOL_SITES } from '../lib/contact';
 import { CopyText } from './ui';
 
 const SKIPS_ALT = 'Quality Standards of Private Institution Malaysia (SKIPS), four stars, Ministry of Education Malaysia';
@@ -62,11 +62,16 @@ export function Footer() {
           <p className="t-label text-ink-3">Admissions</p>
           {s && (
             <>
-              <CopyText value={s.admissions_phone} label="admissions phone number" />
-              <CopyText value={s.admissions_email} label="admissions email" />
-              <a href={gmailEnquiryUrl(s)} target="_blank" rel="noreferrer" className="prose-link inline-flex w-fit items-center gap-1">
-                Make an enquiry in Gmail <ExternalLink size={14} aria-hidden />
-              </a>
+              {campuses(s).map((c) => (
+                <div key={c.id} className="grid gap-1.5">
+                  <p className="text-sm font-semibold text-ink">{c.name}</p>
+                  {c.phone && <CopyText value={c.phone} label={`${c.short} admissions phone number (footer)`} />}
+                  {c.email && <CopyText value={c.email} label={`${c.short} admissions email (footer)`} />}
+                </div>
+              ))}
+              <Link to="/contact" className="prose-link inline-flex w-fit items-center gap-1">
+                All admissions details
+              </Link>
               <p className="t-label mt-3 text-ink-3">IMAS websites</p>
               {SCHOOL_SITES(s).map((site) => (
                 <a key={site.label} href={site.href} target="_blank" rel="noreferrer" className="prose-link inline-flex w-fit items-center gap-1">

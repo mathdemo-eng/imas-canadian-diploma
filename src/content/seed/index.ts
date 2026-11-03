@@ -7,6 +7,9 @@ import { placements, tracks } from './tracks';
 export const settings: Settings = {
   admissions_phone: '+6019 999 9070',
   admissions_email: 'info@imas.edu.my',
+  admissions_phone_kl: '03-2202 7000',
+  admissions_mobile_kl: '+6019 990 7997',
+  admissions_email_kl: 'info.kl@imas.edu.my',
   enquiry_subject: 'Canadian Diploma enquiry',
   website_selangor: 'https://imas.edu.my/',
   website_kl: 'https://kl.imas.edu.my/',

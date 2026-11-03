@@ -107,8 +107,13 @@ export interface DocumentLink {
 }
 
 export interface Settings {
+  /** IMAS Selangor admissions. */
   admissions_phone: string;
   admissions_email: string;
+  /** IMAS Kuala Lumpur admissions (a campus with no phone or email isn't shown). */
+  admissions_phone_kl: string;
+  admissions_mobile_kl: string;
+  admissions_email_kl: string;
   /** Subject line used when a visitor opens an enquiry email in Gmail. */
   enquiry_subject: string;
   website_selangor: string;

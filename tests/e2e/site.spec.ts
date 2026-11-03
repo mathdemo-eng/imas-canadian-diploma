@@ -111,6 +111,13 @@ test('Make an enquiry opens a Gmail message to admissions, and both IMAS website
   expect(href).toContain('to=info%40imas.edu.my');
   await expect(page.getByRole('link', { name: /IMAS Selangor/ }).first()).toHaveAttribute('href', 'https://imas.edu.my/');
   await expect(page.getByRole('link', { name: /IMAS Kuala Lumpur/ }).first()).toHaveAttribute('href', 'https://kl.imas.edu.my/');
+  // Each campus has its own admissions card.
+  const kl = page.getByRole('article', { name: 'IMAS Kuala Lumpur' });
+  await expect(kl).toContainText('info.kl@imas.edu.my');
+  await expect(kl).toContainText('03-2202 7000');
+  await expect(kl.getByRole('link', { name: 'Make an enquiry in Gmail' })).toHaveAttribute('href', /to=info\.kl%40imas\.edu\.my/);
+  await expect(kl.getByRole('link', { name: 'Call' }).first()).toHaveAttribute('href', 'tel:+60322027000');
+  await expect(page.getByRole('article', { name: 'IMAS Selangor' })).toContainText('info@imas.edu.my');
 });
 
 test('student photos and the SKIPS badge load', async ({ page }) => {
