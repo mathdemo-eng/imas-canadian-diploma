@@ -1,11 +1,16 @@
-import { ArrowRight, BarChart3, CalendarRange, FileText, GraduationCap, LockKeyhole, UserRound } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, BarChart3, CalendarRange, FileText, GraduationCap, LockKeyhole, UserRound, UsersRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import studentsLaptop from '../assets/photos/students-laptop.webp';
 import { Chapter } from '../components/Chapter';
+import { DocumentList } from '../components/DocumentList';
 import { RevealImage } from '../components/media';
 import { Badge, ButtonLink, Section } from '../components/ui';
 import { useSite } from '../content/useSite';
+import { useAuth } from '../lib/auth';
+import { isBatchDocument, useBatchDocuments } from '../lib/documents';
+import { fetchMyStudent } from '../lib/students';
 
 function checklist(attendance: number, band: number) {
   return [
@@ -28,7 +33,9 @@ function readChecks(): Record<string, boolean> {
 }
 
 export function StudentHub() {
-  const { settings: s, tracks, announcements, documents } = useSite();
+  const { settings: s, tracks, announcements, documents: allDocuments } = useSite();
+  // Documents for chosen batches are shown only to those students, after they sign in (below).
+  const documents = allDocuments.filter((d) => !isBatchDocument(d));
   const [checks, setChecks] = useState<Record<string, boolean>>(readChecks);
 
   useEffect(() => {
@@ -136,24 +143,15 @@ export function StudentHub() {
         )}
       </Section>
 
-      <Section eyebrow="Documents" title="Useful documents">
+      <Section id="documents" eyebrow="Documents" title="Useful documents">
+        <YourBatchDocuments />
         {documents.length === 0 ? (
           <p className="flex items-start gap-3 rounded-xl border border-dashed border-rule-strong p-6 text-ink-3">
             <FileText size={20} aria-hidden className="mt-0.5 shrink-0" />
             Handbooks, forms and guides from the programme coordinator will be listed here.
           </p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {documents.map((d) => (
-              <li key={d.id}>
-                <a href={d.url} target="_blank" rel="noreferrer" className="group grid gap-1 rounded-xl border border-rule p-4 hover:border-blue">
-                  <span className="t-label text-ink-3">{d.category}</span>
-                  <span className="font-semibold group-hover:text-blue">{d.title}</span>
-                  {d.description && <span className="text-sm text-ink-2">{d.description}</span>}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <DocumentList documents={documents} />
         )}
       </Section>
 
@@ -200,5 +198,52 @@ export function StudentHub() {
         </div>
       </Section>
     </Chapter>
+  );
+}
+
+/**
+ * Documents shared with the reader's batch (cohort and current grade). Shown once a student has
+ * signed in to the portal; before that, an invitation to sign in.
+ */
+function YourBatchDocuments() {
+  const { tracks } = useSite();
+  const auth = useAuth();
+  const userId = auth.status === 'signed-in' ? auth.user.id : null;
+  const student = useQuery({ queryKey: ['my-student', userId], queryFn: () => fetchMyStudent(userId!), enabled: Boolean(userId) });
+  const me = student.data && !student.data.blocked && !student.data.must_change_password ? student.data : null;
+  const { documents, loading } = useBatchDocuments(me);
+
+  if (auth.status === 'loading' || (userId && student.isLoading)) return null;
+  if (!me) {
+    return (
+      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-blue/40 bg-blue-tint px-5 py-4">
+        <UsersRound size={22} aria-hidden className="shrink-0 text-blue" />
+        <p className="min-w-0 flex-[1_1_16rem] text-ink-2">
+          <strong className="text-ink">Documents for your batch</strong> (your cohort and grade) appear here once you sign in to the Student Portal.
+        </p>
+        <ButtonLink to="/portal" variant="secondary" className="w-fit">
+          Sign in
+        </ButtonLink>
+      </div>
+    );
+  }
+  const track = tracks.find((t) => t.id === me.track_id);
+  const batch = [track?.name, me.current_grade ? `Grade ${me.current_grade}` : ''].filter(Boolean).join(' · ');
+  return (
+    <div className="grid gap-3 rounded-2xl border-2 border-blue p-5">
+      <div className="grid gap-0.5">
+        <p className="t-label text-blue">For your batch</p>
+        <p className="font-semibold">{batch || 'Your batch'}</p>
+      </div>
+      {loading ? (
+        <p role="status" className="text-sm text-ink-3">
+          Loading your documents…
+        </p>
+      ) : documents.length ? (
+        <DocumentList documents={documents} batch />
+      ) : (
+        <p className="text-sm text-ink-3">Nothing has been shared with your batch yet. New documents for your cohort and grade will appear here.</p>
+      )}
+    </div>
   );
 }

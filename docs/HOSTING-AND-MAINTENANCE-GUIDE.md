@@ -50,6 +50,7 @@ Do these in order. Steps marked **IT** need the school's IT team.
    2. `supabase/seed.sql`: all the content from this guide's first version
    3. `supabase/migrations/0002_students.sql`: the student accounts table and its security rules
    4. `supabase/migrations/0003_records.sql`: student records (subjects, marks, feedback, teachers, promotions) and their security rules
+   5. `supabase/migrations/0004_document_batches.sql`: documents for chosen batches of students, and who may read them
 
    Each should end with **Success. No rows returned**. Notices such as *"policy … does not exist, skipping"* are normal.
 3. **Turn off public sign-ups.** Open **Authentication → Sign In / Providers**. Under **User Signups**, switch **Allow new users to sign up** **off** and save. Only editors can create accounts. Check that **Email** is enabled under **Auth Providers** (it is by default).
@@ -180,7 +181,7 @@ Do these once, in this order, after the one-time setup. The site keeps working f
 2. In Supabase open **SQL Editor → New query**, paste, and click **Run**.
 3. It should end with **Success. No rows returned**. Notices such as "… does not exist, skipping" are normal.
 
-Already done if you ran four SQL files in section 2; running it twice does no harm.
+Already done if you ran the SQL files in section 2; running it twice does no harm.
 
 ### Step 2: Update the student accounts function (Supabase, 3 minutes)
 1. On GitHub, open `supabase/functions/manage-students/index.ts` and click **Copy**.
@@ -296,7 +297,7 @@ Sign in at **canadian.imas.edu.my/admin** (or use **Staff sign-in** at the botto
 | Update a university or scholarship | **Partner universities** | Edit and save. Untick **Show on the website** to hide it. |
 | Add a campus photo to a university card | **Partner universities** | Paste a link to a photo you have permission to use into **Photo link** and add a **Photo credit**. Without a photo, the card shows a designed postcard of the city. |
 | Post news for students | **Announcements** | **Add announcement**. Newest shows first in the Student Hub. |
-| Share a handbook or form | **Documents** | Upload the file to Google Drive, set **Share → Anyone with the link → Viewer**, copy the link and paste it in. |
+| Share a handbook or form | **Documents** | Upload the file to Google Drive, set **Share → Anyone with the link → Viewer**, copy the link and paste it in. Under **Who can see it**, choose **Everyone** or **Only the batches I choose** (see "Documents for chosen batches" below). |
 | Change the phone number, IELTS band or assessment weights | **Site settings** | Every page that mentions the figure updates. |
 | Change a campus's admissions phone, email or website | **Site settings** | Two groups: **Admissions: IMAS Selangor** and **Admissions: IMAS Kuala Lumpur** (phone, optional mobile, email, website). Each campus has its own card on the Contact page, with **Make an enquiry in Gmail** addressed to that campus, and both appear in the footer. Leave a campus's phone and email empty to hide it. |
 | Add or change a question | **Questions & answers** | Choose who it is mainly for: new or current students. |
@@ -372,6 +373,23 @@ To fix one record, open the student and click **Edit** on the row (status, semes
 
 **Course feedback** (admin → **Feedback**): after each completed course, students answer a short form about the teacher (subject knowledge, clarity, lesson design, engagement, feedback, assessment, support, respect) and the course. **A student sees a course's mark only after sending feedback on it**, and a Grade 12 student sees the **Canadian Diploma Graduate** label only after sending feedback on every Grade 12 course. The **Feedback** page shows who has finished, averages by teacher and course, and comments, all anonymous; a breakdown appears only once 3 or more students have answered. To let a student redo their feedback, open the student → **Edit** on the course → **Let them redo feedback**. To switch the rule off, untick it in **Site settings → Student records**.
 
+### Documents for chosen batches
+A document can be for **everyone** (listed on the public Student Hub page, as before) or **only for chosen batches** of students.
+
+**One-time step (about 2 minutes, only once):** on GitHub open `supabase/migrations/0004_document_batches.sql`, click the **Copy** icon, then in Supabase open **SQL Editor → New query**, paste and click **Run**. It should end with **Success. No rows returned**. Until this is done, saving a document says *"the database needs a one-time update"*. Existing documents stay for everyone.
+
+**Adding a document for a batch** (admin → **Documents → Add document**):
+1. Fill in **Title**, **Link** (Google Drive: **Share → Anyone with the link → Viewer**), and optionally **Description** and **Category**.
+2. Under **Who can see it**, choose **Only the batches I choose**.
+3. Tick the **cohorts** (for example **CAN · Grade 10 entry**) and the **current grade** (for example **Grade 11**). Leave a list unticked to include all of them: ticking only **Grade 12** means every Grade 12 student, in any cohort.
+4. Read the blue sentence under the form: it says exactly who will see the document. Then click **Add document**.
+
+**What students see.** After signing in, a student finds their batch's documents in a **For your batch** box on the **Student Hub** page (above the documents for everyone) and on the **Overview** of their Student Portal. Visitors who haven't signed in see only the documents for everyone, with an invitation to sign in. The database itself decides who can read a batch document, so other students and visitors can't open it from the website. (Anyone who is sent the Google Drive link can still open the file, so keep sensitive files restricted in Drive.)
+
+**The grade follows the student.** A batch is based on each student's **current grade** in their profile, so after promotion a "Grade 11" document is seen by next year's Grade 11 students. Untick **Show on the website** to take an old document down.
+
+**Check what a student sees:** open the student in **Students** and click **View as student**.
+
 ### Campus films (Contact & Admissions page)
 The Contact & Admissions page opens with two short films, **IMAS Selangor** and **IMAS Kuala Lumpur**. Both are **1:04** long and use the same music (the soundtrack of the IMAS Kuala Lumpur tour video). The Selangor film shows only the campus and its facilities; the interviews were left out.
 
@@ -441,6 +459,8 @@ To remove an editor, delete their row in **admins** (and their user in **Authent
 | A student's sign-in says the ID or password isn't right | Check their Student ID in **Students**. If needed, reset their password. |
 | Import: *Could not find the table 'public.students'* | The third SQL file hasn't been run. Run `supabase/migrations/0002_students.sql` (Step 2), then import again. |
 | *Student records aren't set up in the database yet* | Run `supabase/migrations/0003_records.sql` (section 3, step 1). |
+| Saving a document says *the database needs a one-time update* | Run `supabase/migrations/0004_document_batches.sql` in Supabase → **SQL Editor** (section 4, "Documents for chosen batches"), then save again. |
+| A student can't see a batch document | Check the student's **Cohort** and **Current grade** in **Students**, and that the document's ticks include them. **View as student** shows what they see. |
 | **Block access** or the import says *Unknown action* | The `manage-students` function has old code. Update it (Step 3, "When the function's code changes"). |
 | A student says they can't see a mark | They haven't sent feedback on that course yet. On their page the row says *mark hidden from the student until they send feedback*. **View as student** shows what they see. |
 | The **Advisor** tab says the advisor appears in Grade 12 | Set the student's **Current grade** to 12 and choose an **Academic advisor** in their profile. |

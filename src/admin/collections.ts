@@ -1,7 +1,8 @@
 import { CLUSTER_LABEL, TERM_LABEL } from '../content/labels';
-import type { CollectionKey, ContentBundle } from '../content/types';
+import type { CollectionKey, ContentBundle, DocumentLink } from '../content/types';
+import { audienceLabel, audienceSentence, GRADES } from '../lib/documents';
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'list' | 'date' | 'url' | 'email';
+export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'boolean' | 'list' | 'date' | 'url' | 'email' | 'radio' | 'checks';
 
 export interface Option {
   value: string;
@@ -20,6 +21,8 @@ export interface Field {
   numeric?: boolean;
   /** Nullable select: the empty choice saves as null. */
   nullable?: boolean;
+  /** Shown only when this returns true; otherwise it is saved with its default value. */
+  showIf?: (row: Record<string, unknown>) => boolean;
 }
 
 export interface CollectionConfig {
@@ -35,6 +38,8 @@ export interface CollectionConfig {
   defaults: Record<string, unknown>;
   /** Placements are edited one track at a time. */
   filterBy?: { field: string; label: string; options: (b: ContentBundle) => Option[] };
+  /** A live sentence under the form, e.g. who will see a document. */
+  note?: (row: Record<string, unknown>, b: ContentBundle) => string;
 }
 
 const audience: Option[] = [
@@ -216,7 +221,7 @@ export const COLLECTIONS: Record<CollectionKey, CollectionConfig> = {
     key: 'documents',
     title: 'Documents',
     singular: 'document',
-    description: 'Handbooks, forms and guides listed in the Student Hub.',
+    description: 'Handbooks, forms and guides for students: for everyone on the Student Hub page, or only for chosen batches of students.',
     fields: [
       { key: 'title', label: 'Title', type: 'text', required: true },
       { key: 'description', label: 'Description', type: 'text' },
@@ -228,11 +233,41 @@ export const COLLECTIONS: Record<CollectionKey, CollectionConfig> = {
         help: 'For a Google Drive file: Share → General access → “Anyone with the link” (Viewer), then copy the link and paste it here.',
       },
       { key: 'category', label: 'Category', type: 'text', help: 'e.g. Handbook, Form, Guide' },
+      {
+        key: 'audience',
+        label: 'Who can see it',
+        type: 'radio',
+        options: [
+          { value: 'everyone', label: 'Everyone (on the Student Hub page, no sign-in needed)' },
+          { value: 'students', label: 'Only the batches I choose (students see it after signing in)' },
+        ],
+      },
+      {
+        key: 'for_tracks',
+        label: 'Batch: cohorts',
+        type: 'checks',
+        options: trackOptions,
+        showIf: (r) => r.audience === 'students',
+        help: 'Tick one or more. Leave all unticked for every cohort.',
+      },
+      {
+        key: 'for_grades',
+        label: 'Batch: current grade',
+        type: 'checks',
+        numeric: true,
+        options: GRADES.map((g) => ({ value: String(g), label: `Grade ${g}` })),
+        showIf: (r) => r.audience === 'students',
+        help: 'The grade students are in now. Leave all unticked for every grade.',
+      },
       sort,
       published,
     ],
-    defaults: { title: '', description: '', url: '', category: 'Guide', sort: 1000, published: true },
-    summary: (r) => ({ title: String(r.title), meta: `${r.category}${r.published ? '' : ' · hidden'}` }),
+    defaults: { title: '', description: '', url: '', category: 'Guide', audience: 'everyone', for_tracks: [], for_grades: [], sort: 1000, published: true },
+    summary: (r, b) => ({
+      title: String(r.title),
+      meta: `${r.category} · ${audienceLabel(r as unknown as DocumentLink, b.tracks)}${r.published ? '' : ' · hidden'}`,
+    }),
+    note: (r, b) => audienceSentence(r as unknown as DocumentLink, b.tracks),
   },
 };
 

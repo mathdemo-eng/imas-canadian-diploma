@@ -1,7 +1,10 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, CalendarCheck2, CalendarRange, Lock, Sparkles } from 'lucide-react';
+import { ArrowRight, CalendarCheck2, CalendarRange, FileText, Lock, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { DocumentList } from '../components/DocumentList';
 import { shortAcademicYear } from '../lib/academic-year';
+import { useBatchDocuments } from '../lib/documents';
 import { MapleLeafIcon } from '../components/media';
 import { GraduateSeal } from './GraduateSeal';
 import type { PortalData } from './StudentPortal';
@@ -12,6 +15,7 @@ export function Overview({ d, footer }: { d: PortalData; footer?: ReactNode }) {
   const { student, progress, pending } = d;
   const track = d.site.tracks.find((t) => t.id === student.track_id);
   const advisor = student.current_grade === 12 ? d.teacher(student.advisor_id) : undefined;
+  const { documents } = useBatchDocuments(student);
   const rise = (i: number) =>
     reduced ? {} : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.06 * i, duration: 0.4, ease: [0.22, 0.8, 0.3, 1] as const } };
 
@@ -105,6 +109,20 @@ export function Overview({ d, footer }: { d: PortalData; footer?: ReactNode }) {
         </div>
       ) : (
         <p className="rounded-xl bg-sheet-2 p-5 text-ink-2">Your cohort hasn’t been set yet, so your progress can’t be shown. Your coordinator will add it.</p>
+      )}
+
+      {documents.length > 0 && (
+        <section aria-labelledby="batch-documents" className="grid gap-3">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <h2 id="batch-documents" className="flex items-center gap-2 font-display text-2xl font-semibold">
+              <FileText size={20} aria-hidden className="text-blue" /> Documents for your batch
+            </h2>
+            <Link to="/student-hub#documents" className="prose-link text-sm">
+              All documents in the Student Hub
+            </Link>
+          </div>
+          <DocumentList documents={documents} batch />
+        </section>
       )}
 
       {advisor && (

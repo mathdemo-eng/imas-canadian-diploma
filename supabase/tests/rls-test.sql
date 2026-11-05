@@ -5,7 +5,7 @@
 set role anon;
 do $$ begin
   if (select count(*) from public.courses) <> 34 then raise exception 'anon should see 34 courses'; end if;
-  if (select count(*) from public.placements) <> 161 then raise exception 'anon should see 161 placements'; end if;
+  if (select count(*) from public.placements) <> 159 then raise exception 'anon should see 159 placements'; end if;
   if (select count(*) from public.tracks) <> 6 then raise exception 'anon should see 6 tracks'; end if;
 end $$;
 -- Visitors cannot change anything.

@@ -32,6 +32,8 @@ function CollectionEditor({ config }: { config: CollectionConfig }) {
   const [query, setQuery] = useState('');
   const [draft, setDraft] = useState<Row | null>(null);
   const [isNew, setIsNew] = useState(false);
+  // The form reopens on an item once it has been added, so it says "Saved" there.
+  const [justSaved, setJustSaved] = useState<string | null>(null);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -58,6 +60,7 @@ function CollectionEditor({ config }: { config: CollectionConfig }) {
     if (config.filterBy) base[config.filterBy.field] = filter;
     setDraft(base);
     setIsNew(true);
+    setJustSaved(null);
   }
 
   // Placements are grouped under “Grade 11 · Semester 1” headings.
@@ -147,6 +150,7 @@ function CollectionEditor({ config }: { config: CollectionConfig }) {
                         onClick={() => {
                           setDraft(structuredClone(r));
                           setIsNew(false);
+                          setJustSaved(null);
                         }}
                         aria-current={active ? 'true' : undefined}
                         className={`grid w-full gap-0.5 px-4 py-3 text-left ${active ? 'bg-blue-tint' : 'bg-sheet hover:bg-sheet-2'}`}
@@ -171,9 +175,11 @@ function CollectionEditor({ config }: { config: CollectionConfig }) {
               isNew={isNew}
               content={content}
               existingIds={rows.map((r) => r.id)}
+              saved={justSaved !== null && justSaved === draft.id}
               onDone={(saved) => {
                 setDraft(saved);
                 setIsNew(false);
+                setJustSaved(saved?.id ?? null);
               }}
               onClose={() => setDraft(null)}
             />
@@ -192,6 +198,7 @@ function EditorForm({
   isNew,
   content,
   existingIds,
+  saved = false,
   onDone,
   onClose,
 }: {
@@ -200,13 +207,18 @@ function EditorForm({
   isNew: boolean;
   content: ContentBundle;
   existingIds: string[];
+  /** Just added: start with the "Saved" message. */
+  saved?: boolean;
   onDone: (row: Row | null) => void;
   onClose: () => void;
 }) {
   const { save, remove } = useContentEditor();
-  const [row, setRow] = useState<Row>(initial);
+  // Rows saved before a field existed get its default (e.g. older documents are for everyone).
+  const [row, setRow] = useState<Row>(() => ({ ...structuredClone(config.defaults), ...initial }));
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
+  const [status, setStatus] = useState<{ tone: 'ok' | 'error'; text: string } | null>(
+    saved ? { tone: 'ok', text: 'Saved. The website now shows this change.' } : null,
+  );
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -219,7 +231,13 @@ function EditorForm({
     const errs: Record<string, string> = {};
     const out: Row = { ...row };
     for (const f of config.fields) {
+      // A field that isn't shown (e.g. the batch for a document for everyone) goes back to its default.
+      if (f.showIf && !f.showIf(out)) {
+        out[f.key] = structuredClone(config.defaults[f.key]);
+        continue;
+      }
       const v = out[f.key];
+      if (f.type === 'checks') out[f.key] = (Array.isArray(v) ? v : []).map((x) => (f.numeric ? Number(x) : String(x)));
       if (f.type === 'list') out[f.key] = (Array.isArray(v) ? (v as string[]) : []).map((x) => x.trim()).filter(Boolean);
       if (f.type === 'number' && (v === '' || v === null || Number.isNaN(Number(v)))) {
         errs[f.key] = 'Enter a number.';
@@ -256,7 +274,15 @@ function EditorForm({
       setStatus({ tone: 'ok', text: 'Saved. The website now shows this change.' });
       onDone(out);
     } catch (err) {
-      setStatus({ tone: 'error', text: `Not saved: ${err instanceof Error ? err.message : String(err)}` });
+      const msg = err instanceof Error ? err.message : String(err);
+      // The database hasn't had the one-time update that adds batches to documents yet.
+      const needsUpdate = config.key === 'documents' && /audience|for_tracks|for_grades/.test(msg);
+      setStatus({
+        tone: 'error',
+        text: needsUpdate
+          ? 'Not saved: the database needs a one-time update before documents can be given to batches. In Supabase → SQL Editor, run the file supabase/migrations/0004_document_batches.sql (see the hosting guide, “Documents for chosen batches”), then save again.'
+          : `Not saved: ${msg}`,
+      });
     } finally {
       setBusy(false);
     }
@@ -291,9 +317,17 @@ function EditorForm({
         </button>
       </div>
 
-      {config.fields.map((f) => (
-        <FieldInput key={f.key} config={config} field={f} value={row[f.key]} error={errors[f.key]} content={content} onChange={(v) => set(f.key, v)} />
-      ))}
+      {config.fields
+        .filter((f) => !f.showIf || f.showIf(row))
+        .map((f) => (
+          <FieldInput key={f.key} config={config} field={f} value={row[f.key]} error={errors[f.key]} content={content} onChange={(v) => set(f.key, v)} />
+        ))}
+
+      {config.note && (
+        <p className="rounded-lg border-l-4 border-blue bg-blue-tint px-3 py-2 text-sm text-ink-2" aria-live="polite">
+          {config.note(row, content)}
+        </p>
+      )}
 
       {status && (
         <p role="status" className={`rounded-lg px-3 py-2 text-sm ${status.tone === 'ok' ? 'bg-green-tint text-green-ink' : 'bg-maroon-tint text-maroon'}`}>
@@ -373,6 +407,55 @@ function FieldInput({
           {f.label}
         </label>
       );
+    case 'radio':
+    case 'checks': {
+      const options = typeof f.options === 'function' ? f.options(content) : (f.options ?? []);
+      const picked = new Set((Array.isArray(value) ? value : []).map(String));
+      return (
+        <fieldset className="grid gap-2" aria-describedby={describedBy}>
+          <legend className="mb-1 font-semibold">{f.label}</legend>
+          {options.map((o) => {
+            const optionId = `${id}-${o.value}`;
+            const checked = f.type === 'radio' ? String(value ?? '') === o.value : picked.has(o.value);
+            return (
+              <label
+                key={o.value}
+                htmlFor={optionId}
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 ${checked ? 'border-blue bg-blue-tint' : 'border-rule hover:border-blue'}`}
+              >
+                <input
+                  id={optionId}
+                  type={f.type === 'radio' ? 'radio' : 'checkbox'}
+                  name={id}
+                  value={o.value}
+                  checked={checked}
+                  onChange={(e) => {
+                    if (f.type === 'radio') return onChange(o.value);
+                    const next = new Set(picked);
+                    if (e.target.checked) next.add(o.value);
+                    else next.delete(o.value);
+                    // Keep the order of the list, not the order of ticking.
+                    onChange(options.filter((x) => next.has(x.value)).map((x) => (f.numeric ? Number(x.value) : x.value)));
+                  }}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--blue)]"
+                />
+                <span>{o.label}</span>
+              </label>
+            );
+          })}
+          {f.help && (
+            <p id={`${id}-help`} className="text-sm text-ink-3">
+              {f.help}
+            </p>
+          )}
+          {error && (
+            <p id={`${id}-error`} className="text-sm text-maroon">
+              {error}
+            </p>
+          )}
+        </fieldset>
+      );
+    }
     case 'select': {
       const options = typeof f.options === 'function' ? f.options(content) : (f.options ?? []);
       control = (

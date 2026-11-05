@@ -104,6 +104,15 @@ export interface DocumentLink {
   category: string;
   sort: number;
   published: boolean;
+  /**
+   * Who sees it: 'everyone' (the public Student Hub page) or 'students' (only signed-in students
+   * in the chosen batches). Missing on rows saved before batches existed, which means everyone.
+   */
+  audience?: 'everyone' | 'students';
+  /** Batch cohorts (track ids). Empty: every cohort. */
+  for_tracks?: string[];
+  /** Batch current grades. Empty: every grade. */
+  for_grades?: number[];
 }
 
 export interface Settings {

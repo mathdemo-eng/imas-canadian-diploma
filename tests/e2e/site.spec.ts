@@ -704,3 +704,63 @@ test('admin: a course marked Completed without a mark can be removed when ticked
   await expect(page.getByText('Removed 1 record from 1 student.')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('documents: staff choose the batch, and only those students see it after signing in', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/admin/documents');
+
+  async function addDocument(title: string, batch?: { cohorts: string[]; grades: string[] }) {
+    await page.getByRole('button', { name: 'Add document' }).first().click();
+    await page.getByLabel('Title').fill(title);
+    await page.getByLabel('Link').fill(`https://example.com/${title.toLowerCase().replace(/\W+/g, '-')}`);
+    if (batch) {
+      await page.getByLabel('Only the batches I choose').check();
+      for (const c of batch.cohorts) await page.getByRole('group', { name: 'Batch: cohorts' }).getByLabel(c, { exact: true }).check();
+      for (const g of batch.grades) await page.getByRole('group', { name: 'Batch: current grade' }).getByLabel(g, { exact: true }).check();
+    }
+    await page.locator('form').getByRole('button', { name: 'Add document' }).click();
+    await expect(page.getByText('Saved. The website now shows this change.')).toBeVisible();
+  }
+
+  await addDocument('Student handbook');
+  // The form says exactly who will see a batch document before it is saved.
+  await page.getByRole('button', { name: 'Add document' }).first().click();
+  await page.getByLabel('Only the batches I choose').check();
+  await page.getByRole('group', { name: 'Batch: cohorts' }).getByLabel('CAN · Grade 10 entry', { exact: true }).check();
+  await page.getByRole('group', { name: 'Batch: current grade' }).getByLabel('Grade 12', { exact: true }).check();
+  await expect(page.getByText('Students now in Grade 12 in CAN · Grade 10 entry see it after signing in')).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Close' }).click();
+
+  await addDocument('Grade 12 CAN timetable', { cohorts: ['CAN · Grade 10 entry'], grades: ['Grade 12'] });
+  await addDocument('Grade 10 study guide', { cohorts: [], grades: ['Grade 10'] });
+  await expect(page.getByRole('button', { name: /Grade 12 CAN timetable/ })).toContainText('Grade 12 · CAN · Grade 10 entry');
+
+  // Visitors: the document for everyone only, and an invitation to sign in.
+  await go(page, '/student-hub');
+  const docs = page.locator('#documents');
+  await expect(docs.getByRole('link', { name: /Student handbook/ })).toBeVisible();
+  await expect(docs.getByText('Grade 12 CAN timetable')).toHaveCount(0);
+  await expect(docs.getByText('Grade 10 study guide')).toHaveCount(0);
+  await expect(docs.getByText('appear here once you sign in to the Student Portal')).toBeVisible();
+
+  // The demo student is in CAN · Grade 10 entry and now in Grade 12.
+  await go(page, '/portal');
+  await page.getByLabel('Student ID').fill('260001');
+  await page.getByLabel('Password', { exact: true }).fill('A1234567');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByLabel('New password').fill('Maple-leaf7');
+  await page.getByLabel('Type it again').fill('Maple-leaf7');
+  await page.getByRole('button', { name: 'Save my password' }).click();
+  const forBatch = page.getByRole('region', { name: 'Documents for your batch' });
+  await expect(forBatch.getByRole('link', { name: /Grade 12 CAN timetable/ })).toBeVisible();
+  await expect(forBatch.getByText('Grade 10 study guide')).toHaveCount(0);
+  await expectAccessible(page);
+
+  await go(page, '/student-hub');
+  await expect(docs.getByText('For your batch')).toBeVisible();
+  await expect(docs.getByRole('link', { name: /Grade 12 CAN timetable/ })).toBeVisible();
+  await expect(docs.getByRole('link', { name: /Student handbook/ })).toBeVisible();
+  await expect(docs.getByText('Grade 10 study guide')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
